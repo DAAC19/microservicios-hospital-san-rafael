@@ -1,12 +1,12 @@
 from flask import Flask
+from config import Config
 from extensions import db
 from routes.deviceRoute import device_bp
 from routes.deviceTypeRoute import device_type_bp
 
 app = Flask(__name__)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///devices.db"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config.from_object(Config)
 
 db.init_app(app)
 
