@@ -153,7 +153,7 @@ microservicio/
 
 **Servidor reportes ejecutandose
 
-![alt text](docs/img/Server-Reports.png.png)
+![alt text](docs/img/Server-Reports.png)
 
 **Obtener reportes
 

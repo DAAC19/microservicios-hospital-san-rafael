@@ -21,4 +21,4 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
 
-    app.run(port=5003, debug=True)
+    app.run(port=5006, debug=True)
