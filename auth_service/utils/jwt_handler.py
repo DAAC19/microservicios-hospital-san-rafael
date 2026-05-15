@@ -4,9 +4,11 @@ from config import SECRET_KEY
 
 # SECRET_KEY = "supersecret"
 
-def generate_token(user):
+def generate_token(user_credentials, role):
     payload = {
-        "user_id": user.id,
+        "credential_id": user_credentials.id,
+        "username": user_credentials.username,
+        "role": role,
         "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
     }
 

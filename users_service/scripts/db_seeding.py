@@ -4,8 +4,10 @@ from models.userInfoModel import db
 def seed_roles():
     """Inserta roles iniciales si la tabla está vacía."""
     roles_data = [
-        {"id": 1, "role_name": "Admin"},
-        {"id": 2, "role_name": "User"},
+        {"id": 1, "role_name": "ADMIN"},
+        {"id": 2, "role_name": "USER"},
+        {"id": 3, "role_name": "SUPERVISOR"},
+        {"id": 4, "role_name": "TECNICIAN"},
     ]
     
     try:
