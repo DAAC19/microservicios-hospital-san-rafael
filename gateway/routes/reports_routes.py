@@ -11,7 +11,7 @@ reports_bp = Blueprint("reports_bp", __name__)
 
 @reports_bp.route("/reports", methods=["GET"])
 @token_required
-@roles_required("ADMIN", "SUPERVISOR", "CONSULTA")
+@roles_required("ADMIN", "SUPERVISOR", "USER")
 def get_reports():
     response = requests.get(REPORTS_URL)
     return response_json(response)
@@ -31,7 +31,7 @@ def create_report():
 
 @reports_bp.route("/reports/<int:id>", methods=["GET"])
 @token_required
-@roles_required("ADMIN", "SUPERVISOR", "CONSULTA")
+@roles_required("ADMIN", "SUPERVISOR", "USER")
 def get_report(id):
     response = requests.get(f"{REPORTS_URL}/{id}")
     return response_json(response)

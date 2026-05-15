@@ -11,7 +11,7 @@ metrics_bp = Blueprint("metrics_bp", __name__)
 
 @metrics_bp.route("/metrics", methods=["GET"])
 @token_required
-@roles_required("ADMIN", "TECNICO", "SUPERVISOR", "CONSULTA")
+@roles_required("ADMIN", "TECNICIAN", "SUPERVISOR", "USER")
 def get_metrics():
     response = requests.get(METRICS_URL)
     return response_json(response)
@@ -19,7 +19,7 @@ def get_metrics():
 
 @metrics_bp.route("/metrics", methods=["POST"])
 @token_required
-@roles_required("ADMIN", "TECNICO")
+@roles_required("ADMIN", "TECNICIAN")
 def create_metric():
     response = requests.post(
         METRICS_URL,
@@ -31,7 +31,7 @@ def create_metric():
 
 @metrics_bp.route("/metrics/<int:id>", methods=["GET"])
 @token_required
-@roles_required("ADMIN", "TECNICO", "SUPERVISOR", "CONSULTA")
+@roles_required("ADMIN", "TECNICIAN", "SUPERVISOR", "USER")
 def get_metric(id):
     response = requests.get(f"{METRICS_URL}/{id}")
     return response_json(response)
@@ -39,7 +39,7 @@ def get_metric(id):
 
 @metrics_bp.route("/metrics/<int:id>", methods=["PUT"])
 @token_required
-@roles_required("ADMIN", "TECNICO")
+@roles_required("ADMIN", "TECNICIAN")
 def update_metric(id):
     response = requests.put(
         f"{METRICS_URL}/{id}",
@@ -59,7 +59,7 @@ def delete_metric(id):
 
 @metrics_bp.route("/metric-types", methods=["GET"])
 @token_required
-@roles_required("ADMIN", "TECNICO", "SUPERVISOR")
+@roles_required("ADMIN", "TECNICIAN", "SUPERVISOR")
 def get_metric_types():
     response = requests.get(METRIC_TYPES_URL)
     return response_json(response)
@@ -79,7 +79,7 @@ def create_metric_type():
 
 @metrics_bp.route("/metric-types/<int:id>", methods=["GET"])
 @token_required
-@roles_required("ADMIN", "TECNICO", "SUPERVISOR")
+@roles_required("ADMIN", "TECNICIAN", "SUPERVISOR")
 def get_metric_type(id):
     response = requests.get(f"{METRIC_TYPES_URL}/{id}")
     return response_json(response)
