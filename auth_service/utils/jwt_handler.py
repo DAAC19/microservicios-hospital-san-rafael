@@ -8,7 +8,8 @@ def generate_token(user_credentials, role):
     payload = {
         "credential_id": user_credentials.id,
         "username": user_credentials.username,
-        "role": role,
+        "role_id":role.id,
+        "role": role.role_name,
         "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
     }
 

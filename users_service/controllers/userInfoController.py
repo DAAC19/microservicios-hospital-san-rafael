@@ -1,6 +1,5 @@
 from extensions import db
 from models.userInfoModel import User
-from models.roleModel import Role
 
 def get_all_users():
     users = User.query.all()
@@ -15,16 +14,12 @@ def get_user_by_id(user_id):
     return serialize_user(user),200
 
 def create_user(data):
-    role_id = data.get('role_id', 1)
-    role_exists = Role.query.get(role_id)
-    if not role_exists:
-        return {"error":f"Aún no existe el rol con id {role_id}"}
     new_user = User(
         first_name=data['first_name'], 
         last_name=data['last_name'],
         document=data['document'],
         phone=data['phone'],
-        role_id=data.get('role_id', 1))
+        )
     if User.query.filter_by(document=data['document']).first():
         return {"error":"El documento ya se encuentra registrado"}, 400
     db.session.add(new_user)
@@ -70,6 +65,5 @@ def serialize_user(user):
         "last_name": user.last_name,
         "document": user.document,
         "phone": user.phone,
-        "role_id": user.role_id
     }
 
