@@ -7,4 +7,3 @@ class User(db.Model):
     last_name = db.Column(db.String(100), nullable=False)
     document = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(100), nullable=False)
-    role_id = db.Column(db.Integer, default=1)

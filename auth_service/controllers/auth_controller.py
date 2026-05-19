@@ -1,0 +1,79 @@
+from models.userModel import UserCredentials
+from models.roleModel import Role
+from extensions import db
+from utils.jwt_handler import generate_token
+from werkzeug.security import generate_password_hash, check_password_hash
+import requests
+
+USERS_SERVICE_URL = "http://localhost:5001/users"
+
+
+def get_user_info(user_id):
+    try:
+        response = requests.get(f"{USERS_SERVICE_URL}/{user_id}", timeout=5)
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    except requests.RequestException:
+        return None
+
+def login(data):
+    username = data.get("username")
+    password = data.get("password")
+
+    if not username or not password:
+        return {"Error": "username y password son obligatorios"}, 400
+
+    user = UserCredentials.query.filter_by(username=username).first()
+
+    if not user:
+        return {"Error": "User not found"}, 404
+
+    if not check_password_hash(user.password, password):
+        return {"Error": "Invalid password"}, 401
+
+    role = Role.query.get(user.role_id)
+
+    if not role:
+        return {"Error": "Rol no encontrado"}, 404
+
+    token = generate_token(user, role)
+
+    return {"token": token}, 200
+
+
+def register(data):
+    username = data.get("username")
+    user_id = data.get("user_id")
+    password = data.get("password")
+    role_id = data.get("role_id")
+
+    if not username or not user_id or not password:
+        return {"Error": "username, user_id y password son obligatorios"}, 400
+
+    if UserCredentials.query.filter_by(username=username).first():
+        return {"Error": "El usuario ya existe"}, 400
+
+    if UserCredentials.query.filter_by(user_id=user_id).first():
+        return {"Error": "Este user_id ya tiene credenciales asociadas"}, 400
+    
+    role = Role.query.get(role_id)
+    if not role:
+        return {"Error": "El role_id no existe"}, 404
+
+    hashed_password = generate_password_hash(password)
+
+    new_user = UserCredentials(
+        username=username,
+        password=hashed_password,
+        user_id=user_id,
+        role_id=role_id
+    )
+
+    db.session.add(new_user)
+    db.session.commit()
+
+    return {"Mensaje": "Usuario registrado exitosamente"}, 201
