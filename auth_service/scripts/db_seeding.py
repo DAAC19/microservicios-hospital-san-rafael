@@ -7,7 +7,7 @@ def seed_roles():
         {"id": 1, "role_name": "ADMIN"},
         {"id": 2, "role_name": "USER"},
         {"id": 3, "role_name": "SUPERVISOR"},
-        {"id": 4, "role_name": "TECNICIAN"},
+        {"id": 4, "role_name": "TECHNICIAN"},
     ]
     
     try:
