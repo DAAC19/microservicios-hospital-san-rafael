@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/home";
 import Login from "./pages/login";
 import Dashboard from "./pages/dashboard";
+import Locations from "./pages/locations";
+import Metrics from "./pages/metrics";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem("token");
@@ -29,6 +31,24 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/locations"
+          element={
+            <ProtectedRoute>
+              <Locations />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+  path="/metrics"
+  element={
+    <ProtectedRoute>
+      <Metrics />
+    </ProtectedRoute>
+  }
+/>
       </Routes>
     </BrowserRouter>
   );
