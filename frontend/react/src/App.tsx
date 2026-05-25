@@ -4,6 +4,8 @@ import Login from "./pages/login";
 import Dashboard from "./pages/dashboard";
 import Locations from "./pages/locations";
 import Metrics from "./pages/metrics";
+import Alerts from "./pages/alerts";
+import Reports from "./pages/reports";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem("token");
@@ -42,13 +44,31 @@ function App() {
         />
 
         <Route
-  path="/metrics"
-  element={
-    <ProtectedRoute>
-      <Metrics />
-    </ProtectedRoute>
-  }
-/>
+          path="/metrics"
+          element={
+            <ProtectedRoute>
+              <Metrics />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/alerts"
+          element={
+            <ProtectedRoute>
+              <Alerts />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRoute>
+              <Reports />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

@@ -25,7 +25,7 @@ function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("all");
- 
+
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -52,12 +52,12 @@ function Dashboard() {
         try {
           const locationsData = await getLocations();
           if (isMounted) setLocations(locationsData);
-        } catch {}
+        } catch { }
         if (permissions?.canViewAlerts) {
           try {
             const alertsData = await getAlerts();
             if (isMounted) setAlerts(alertsData);
-          } catch {}
+          } catch { }
         }
       } catch {
         if (isMounted) setError("Error al cargar los datos. Por favor, intenta de nuevo.");
@@ -100,7 +100,7 @@ function Dashboard() {
       const data = await getDevices();
       setDevices(data);
       if (permissions?.canViewAlerts) {
-        try { setAlerts(await getAlerts()); } catch {}
+        try { setAlerts(await getAlerts()); } catch { }
       }
     } catch {
       setError("No se pudieron actualizar los dispositivos.");
@@ -679,11 +679,25 @@ function Dashboard() {
           )}
           {permissions.canViewAll && (
             <li>
-               <button className="db-nav-link" onClick={() => navigate("/metrics")}>
-                 Métricas
-               </button>
+              <button className="db-nav-link" onClick={() => navigate("/metrics")}>
+                Métricas
+              </button>
             </li>
-)}
+          )}
+          {permissions.canViewAlerts && (
+            <li>
+              <button className="db-nav-link" onClick={() => navigate("/alerts")}>
+                Alertas
+              </button>
+            </li>
+          )}
+          {permissions.canViewReports && (
+            <li>
+              <button className="db-nav-link" onClick={() => navigate("/reports")}>
+                Reportes
+              </button>
+            </li>
+          )}
         </ul>
 
         <div className="db-nav-right">

@@ -1,5 +1,5 @@
 from flask import Flask
-from gateway.config import Config
+from config import Config
 from extensions import db
 from scripts.db_seeding import seed_admin_user
 from routes.userInfoRoute import user_bp
