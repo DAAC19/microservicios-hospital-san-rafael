@@ -25,6 +25,9 @@ function Alerts() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
 
+  // ── Modal de confirmación ──────────────────────────────────────────────────
+  const [confirmDelete, setConfirmDelete] = useState<string | number | null>(null);
+
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -85,10 +88,10 @@ function Alerts() {
       setCreating(true);
       setCreateError("");
       const created = await createAlert({
-      device_id: Number(newDeviceId),
-      severity_id: Number(newSeverityId),
-      message: newMessage,
-    } as any);
+        device_id: Number(newDeviceId),
+        severity_id: Number(newSeverityId),
+        message: newMessage,
+      } as any);
       setAlerts((prev) => [created, ...prev]);
       setNewDeviceId("");
       setNewSeverityId("1");
@@ -235,8 +238,96 @@ function Alerts() {
         .db-footer-links { display: flex; gap: 16px; }
         .db-footer-link { font-size: 0.75rem; color: #475569; cursor: pointer; text-decoration: none; background: none; border: none; font-family: 'DM Sans', sans-serif; }
         .db-footer-link:hover { color: #94a3b8; }
+
+        /* ── Modal overlay ───────────────────────────────────────────────── */
+        .db-modal-overlay {
+          position: fixed; inset: 0; background: rgba(15,23,42,0.5);
+          z-index: 9999; display: flex; align-items: center; justify-content: center;
+          animation: fadeIn 0.15s ease;
+        }
+        .db-modal {
+          background: #fff; border-radius: 18px; padding: 2rem 2rem 1.75rem;
+          width: 380px; max-width: calc(100vw - 2rem); text-align: center;
+          box-shadow: 0 24px 64px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.08);
+          animation: slideUp 0.2s ease;
+        }
+        .db-modal-icon {
+          width: 56px; height: 56px; border-radius: 50%; background: #fef2f2;
+          display: flex; align-items: center; justify-content: center;
+          margin: 0 auto 1.1rem; font-size: 24px;
+        }
+        .db-modal-title {
+          font-family: 'Fraunces', serif; font-size: 1.2rem; font-weight: 800;
+          color: #0f172a; margin-bottom: 8px;
+        }
+        .db-modal-body {
+          font-size: 0.875rem; color: #64748b; line-height: 1.6;
+          margin-bottom: 1.5rem;
+        }
+        .db-modal-actions { display: flex; gap: 10px; }
+        .db-modal-cancel {
+          flex: 1; padding: 10px 0; border-radius: 9px; font-size: 0.875rem;
+          font-weight: 600; cursor: pointer; border: 1.5px solid #e2e8f0;
+          background: #fff; color: #475569; font-family: 'DM Sans', sans-serif;
+          transition: all 0.15s;
+        }
+        .db-modal-cancel:hover { background: #f8fafc; border-color: #cbd5e1; }
+        .db-modal-confirm {
+          flex: 1; padding: 10px 0; border-radius: 9px; font-size: 0.875rem;
+          font-weight: 700; cursor: pointer; border: none;
+          background: #dc2626; color: #fff; font-family: 'DM Sans', sans-serif;
+          transition: all 0.15s;
+        }
+        .db-modal-confirm:hover { background: #b91c1c; }
+
+        @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(16px) scale(0.97); } to { opacity: 1; transform: none; } }
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
+
+      {/* ── MODAL DE CONFIRMACIÓN ──────────────────────────────────────────── */}
+      {confirmDelete !== null && (
+        <div
+          className="db-modal-overlay"
+          onClick={() => setConfirmDelete(null)}
+        >
+          <div
+            className="db-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
+          >
+            <div className="db-modal-icon">🗑️</div>
+            <div className="db-modal-title" id="modal-title">
+              ¿Eliminar esta alerta?
+            </div>
+            <p className="db-modal-body">
+              Esta acción <strong>no se puede deshacer</strong>. La alerta será
+              eliminada permanentemente del sistema.
+            </p>
+            <div className="db-modal-actions">
+              <button
+                className="db-modal-cancel"
+                onClick={() => setConfirmDelete(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="db-modal-confirm"
+                onClick={() => {
+                  setAlerts((prev) =>
+                    prev.filter((a) => String(a.id) !== String(confirmDelete))
+                  );
+                  setConfirmDelete(null);
+                }}
+              >
+                Sí, eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* NAVBAR */}
       <nav className="db-nav">
@@ -346,7 +437,11 @@ function Alerts() {
                 />
               </div>
             </div>
-            {createError && <div className="db-error" style={{ margin: "0 1.5rem 1rem" }}>✕ {createError}</div>}
+            {createError && (
+              <div className="db-error" style={{ margin: "0 1.5rem 1rem" }}>
+                ✕ {createError}
+              </div>
+            )}
             <div className="db-form-footer">
               <button
                 className="db-btn-primary"
@@ -425,7 +520,7 @@ function Alerts() {
                 <tbody>
                   {filtered.map((alert) => {
                     const sev = getSeverityLabel(alert).toLowerCase();
-                    const resolved = isResolved(alert);
+                    const alertResolved = isResolved(alert);
                     return (
                       <tr key={alert.id}>
                         <td><span className="db-mono">{alert.id}</span></td>
@@ -437,8 +532,8 @@ function Alerts() {
                         </td>
                         <td><span className="db-msg">{alert.message}</span></td>
                         <td>
-                          <span className={`db-badge ${resolved ? "db-badge-resolved" : "db-badge-open"}`}>
-                            {resolved ? "Resuelta" : "Abierta"}
+                          <span className={`db-badge ${alertResolved ? "db-badge-resolved" : "db-badge-open"}`}>
+                            {alertResolved ? "Resuelta" : "Abierta"}
                           </span>
                         </td>
                         <td style={{ fontSize: "0.78rem", color: "#64748b" }}>
@@ -451,19 +546,16 @@ function Alerts() {
                             <button
                               className="db-btn-success"
                               onClick={() => handleResolve(alert.id)}
-                              disabled={resolved}
-                              title={resolved ? "Ya resuelta" : "Marcar como resuelta"}
+                              disabled={alertResolved}
+                              title={alertResolved ? "Ya resuelta" : "Marcar como resuelta"}
                             >
                               ✔ Resolver
                             </button>
                             {canDelete && (
                               <button
                                 className="db-btn-del"
-                                onClick={() => {
-                                  if (window.confirm("¿Eliminar esta alerta?")) {
-                                    setAlerts((prev) => prev.filter((a) => String(a.id) !== String(alert.id)));
-                                  }
-                                }}
+                                onClick={() => setConfirmDelete(alert.id)}
+                                title="Eliminar alerta"
                               >
                                 🗑️
                               </button>

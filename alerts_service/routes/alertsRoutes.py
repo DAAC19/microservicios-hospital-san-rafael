@@ -3,6 +3,7 @@ from controllers.alertsController import *
 
 alerts_bp = Blueprint('alerts_bp', __name__)
 
+
 @alerts_bp.route('/severities', methods=['GET'])
 def get_severities_route():
     result, status = get_all_severities()
@@ -12,11 +13,15 @@ def get_severities_route():
 @alerts_bp.route('/severities', methods=['POST'])
 def create_severity_route():
     data = request.get_json()
-
     if not data:
         return jsonify({"error": "JSON data required"}), 400
-
     result, status = create_severity(data)
+    return jsonify(result), status
+
+
+@alerts_bp.route('/severities/<int:severity_id>', methods=['DELETE'])
+def delete_severity_route(severity_id):
+    result, status = delete_severity(severity_id)
     return jsonify(result), status
 
 
@@ -35,10 +40,8 @@ def get_alert_route(alert_id):
 @alerts_bp.route('/alerts', methods=['POST'])
 def create_alert_route():
     data = request.get_json()
-
     if not data:
         return jsonify({"error": "JSON data required"}), 400
-
     result, status = create_alert(data)
     return jsonify(result), status
 

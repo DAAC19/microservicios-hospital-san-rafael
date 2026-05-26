@@ -21,11 +21,7 @@ def get_alerts():
 @token_required
 @roles_required("ADMIN", "TECHNICIAN")
 def create_alert():
-    response = requests.post(
-        ALERTS_URL,
-        json=request.json
-    )
-
+    response = requests.post(ALERTS_URL, json=request.json)
     return response_json(response)
 
 
@@ -37,18 +33,6 @@ def get_alert(id):
     return response_json(response)
 
 
-@alerts_bp.route("/alerts/<int:id>", methods=["PUT"])
-@token_required
-@roles_required("ADMIN", "TECHNICIAN", "SUPERVISOR")
-def update_alert(id):
-    response = requests.put(
-        f"{ALERTS_URL}/{id}",
-        json=request.json
-    )
-
-    return response_json(response)
-
-
 @alerts_bp.route("/alerts/<int:id>", methods=["DELETE"])
 @token_required
 @roles_required("ADMIN")
@@ -57,9 +41,19 @@ def delete_alert(id):
     return response_json(response)
 
 
-@alerts_bp.route("/severities", methods=["GET"])
+# ── RESOLVE ── PATCH porque el microservicio usa PATCH
+@alerts_bp.route("/alerts/<int:id>/resolve", methods=["PATCH"])
 @token_required
 @roles_required("ADMIN", "TECHNICIAN", "SUPERVISOR")
+def resolve_alert(id):
+    response = requests.patch(f"{ALERTS_URL}/{id}/resolve")
+    return response_json(response)
+
+
+# ── SEVERITIES ──
+@alerts_bp.route("/severities", methods=["GET"])
+@token_required
+@roles_required("ADMIN", "TECHNICIAN", "SUPERVISOR", "USER")
 def get_severities():
     response = requests.get(SEVERITIES_URL)
     return response_json(response)
@@ -69,31 +63,7 @@ def get_severities():
 @token_required
 @roles_required("ADMIN")
 def create_severity():
-    response = requests.post(
-        SEVERITIES_URL,
-        json=request.json
-    )
-
-    return response_json(response)
-
-
-@alerts_bp.route("/severities/<int:id>", methods=["GET"])
-@token_required
-@roles_required("ADMIN", "TECHNICIAN", "SUPERVISOR")
-def get_severity(id):
-    response = requests.get(f"{SEVERITIES_URL}/{id}")
-    return response_json(response)
-
-
-@alerts_bp.route("/severities/<int:id>", methods=["PUT"])
-@token_required
-@roles_required("ADMIN")
-def update_severity(id):
-    response = requests.put(
-        f"{SEVERITIES_URL}/{id}",
-        json=request.json
-    )
-
+    response = requests.post(SEVERITIES_URL, json=request.json)
     return response_json(response)
 
 

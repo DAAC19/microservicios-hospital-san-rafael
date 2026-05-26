@@ -23,6 +23,6 @@ export const createAlert = async (
 export const resolveAlert = async (
   id: string | number
 ): Promise<Alert> => {
-  const response = await api.put<Alert>(`/alerts/${id}/resolve`);
+  const response = await api.patch<Alert>(`/alerts/${id}/resolve`);
   return response.data;
 };
