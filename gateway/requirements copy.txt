@@ -1,8 +1,6 @@
 Flask
-Flask-Cors
 Flask-SQLAlchemy
 psycopg2-binary
 requests
 PyJWT
 Werkzeug
-flask-cors
