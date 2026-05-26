@@ -737,6 +737,12 @@ export default function Locations() {
           <li>
             <button className="lc-nav-link active" onClick={() => navigate("/metrics")}>Métricas</button>
           </li>
+          <li>
+            <button className="lc-nav-link active" onClick={() => navigate("/alerts")}>Alertas</button>
+          </li>
+          <li>
+            <button className="lc-nav-link active" onClick={() => navigate("/reports")}>Reportes</button>
+          </li>
         </ul>
 
         <div className="lc-nav-right">

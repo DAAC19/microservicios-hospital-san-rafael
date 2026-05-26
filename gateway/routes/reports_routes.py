@@ -8,14 +8,23 @@ from utils import response_json
 
 reports_bp = Blueprint("reports_bp", __name__)
 
-
 @reports_bp.route("/reports", methods=["GET"])
 @token_required
 @roles_required("ADMIN", "SUPERVISOR", "USER")
 def get_reports():
-    response = requests.get(REPORTS_URL)
+    report_type = request.args.get("type", "general")
+    
+    type_map = {
+        "general":  f"{REPORTS_URL}/general",
+        "alerts":   f"{REPORTS_URL}/alerts",
+        "metrics":  f"{REPORTS_URL}/metrics",
+        "devices":  f"{REPORTS_URL}/devices",
+        "last_24h": f"{REPORTS_URL}/last24h",
+    }
+    
+    url = type_map.get(report_type, f"{REPORTS_URL}/general")
+    response = requests.get(url)
     return response_json(response)
-
 
 @reports_bp.route("/reports", methods=["POST"])
 @token_required

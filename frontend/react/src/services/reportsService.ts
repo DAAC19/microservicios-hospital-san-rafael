@@ -1,8 +1,8 @@
 import api from "../api/api";
 import type { Report } from "../types/report";
 
-export const getReports = async (): Promise<Report[]> => {
-  const response = await api.get<Report[]>("/reports");
+export const getReports = async (type: string = "general"): Promise<Report[]> => {
+  const response = await api.get<Report[]>(`/reports?type=${type}`);
   return response.data;
 };
 

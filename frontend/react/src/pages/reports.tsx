@@ -15,18 +15,18 @@ const REPORT_TYPES = [
 ];
 
 const typeColor: Record<string, { bg: string; color: string; icon: string }> = {
-  alerts:   { bg: "#fef2f2", color: "#991b1b", icon: "🚨" },
-  metrics:  { bg: "#eff6ff", color: "#1e40af", icon: "📈" },
-  devices:  { bg: "#f0fdf4", color: "#166534", icon: "🖥️" },
-  general:  { bg: "#f5f3ff", color: "#5b21b6", icon: "📊" },
+  alerts: { bg: "#fef2f2", color: "#991b1b", icon: "🚨" },
+  metrics: { bg: "#eff6ff", color: "#1e40af", icon: "📈" },
+  devices: { bg: "#f0fdf4", color: "#166534", icon: "🖥️" },
+  general: { bg: "#f5f3ff", color: "#5b21b6", icon: "📊" },
   last_24h: { bg: "#fffbeb", color: "#92400e", icon: "⏱️" },
 };
 
 const typeBadgeClass: Record<string, string> = {
-  alerts:   "db-badge-rtype-alerts",
-  metrics:  "db-badge-rtype-metrics",
-  devices:  "db-badge-rtype-devices",
-  general:  "db-badge-rtype-general",
+  alerts: "db-badge-rtype-alerts",
+  metrics: "db-badge-rtype-metrics",
+  devices: "db-badge-rtype-devices",
+  general: "db-badge-rtype-general",
   last_24h: "db-badge-rtype-24h",
 };
 
@@ -74,12 +74,12 @@ function Reports() {
     fetchReports();
   }, [user, permissions]);
 
-  const fetchReports = async () => {
+  const fetchReports = async (type: string = genType) => {
     try {
       setLoading(true);
       setError("");
-      const data = await getReports();
-      setReports(data);
+      const data = await getReports(type);
+      setReports(Array.isArray(data) ? data : [data]);
     } catch {
       setError("No se pudieron cargar los reportes.");
     } finally {
@@ -92,13 +92,9 @@ function Reports() {
       setGenerating(true);
       setGenError("");
       setGenSuccess("");
-      const created = await generateReport({
-        type: genType,
-        title: REPORT_TYPES.find((t) => t.value === genType)?.label ?? genType,
-        description: genFrom && genTo ? `Desde ${genFrom} hasta ${genTo}` : undefined,
-      });
-      setReports((prev) => [created, ...prev]);
-      setGenSuccess("✅ Reporte generado correctamente.");
+      const data = await getReports(genType);
+      setReports(Array.isArray(data) ? data : [data]);
+      setGenSuccess("✅ Reporte cargado correctamente.");
     } catch {
       setGenError("Error al generar el reporte. Intenta de nuevo.");
     } finally {
@@ -350,7 +346,7 @@ function Reports() {
                   <option key={t.value} value={t.value}>{t.label}</option>
                 ))}
               </select>
-              <button className="db-btn-primary" onClick={fetchReports} disabled={loading}>
+              <button className="db-btn-primary" onClick={() => fetchReports(filterType !== "all" ? filterType : genType)} disabled={loading}>
                 {loading ? "⟳ Cargando..." : "⟳ Actualizar"}
               </button>
             </div>

@@ -330,6 +330,9 @@ export default function Metrics() {
           <li><button className="mx-nav-link" onClick={() => navigate("/dashboard")}>Dashboard</button></li>
           <li><button className="mx-nav-link" onClick={() => navigate("/locations")}>Ubicaciones</button></li>
           <li><button className="mx-nav-link active">Métricas</button></li>
+          <li><button className="mx-nav-link" onClick={() => navigate("/alerts")}>Alertas</button></li>
+          <li><button className="mx-nav-link" onClick={() => navigate("/reports")}>Reportes</button></li>
+          
         </ul>
         <div className="mx-nav-right">
           {user && (

@@ -33,4 +33,4 @@ METRIC_TYPES_URL = "http://localhost:5004/metric-types"
 ALERTS_URL = "http://localhost:5005/alerts"
 SEVERITIES_URL = "http://localhost:5005/severities"
 
-REPORTS_URL = "http://localhost:5006/reports"
+REPORTS_URL = "http://localhost:5006/api/reports"
