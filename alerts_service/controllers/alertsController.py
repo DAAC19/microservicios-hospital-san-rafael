@@ -122,3 +122,11 @@ def serialize_severity(severity):
         "id": severity.id,
         "name": severity.name
     }
+
+def delete_severity(severity_id):
+    severity = AlertSeverity.query.get(severity_id)
+    if not severity:
+        return {"message": "Severity not found"}, 404
+    db.session.delete(severity)
+    db.session.commit()
+    return {"message": "Severity successfully deleted"}, 200

@@ -3,30 +3,32 @@ import { useNavigate } from "react-router-dom";
 import { getAlerts, createAlert, resolveAlert } from "../services/alertService";
 import { logout, getUserProfile } from "../services/authService";
 import { roleInfo, rolePermissionsMap } from "../utils/permissions";
+import api from "../api/api";
 import type { Alert } from "../types/alert";
 import type { User, RolePermissions } from "../types/auth";
 
 function Alerts() {
   const navigate = useNavigate();
 
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [user, setUser] = useState<User | null>(null);
+  const [alerts, setAlerts]         = useState<Alert[]>([]);
+  const [user, setUser]             = useState<User | null>(null);
   const [permissions, setPermissions] = useState<RolePermissions | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState("");
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [searchTerm, setSearchTerm]       = useState("");
+  const [filterStatus, setFilterStatus]   = useState("all");
   const [filterSeverity, setFilterSeverity] = useState("all");
 
-  const [newDeviceId, setNewDeviceId] = useState("");
-  const [newSeverityId, setNewSeverityId] = useState("1");
-  const [newMessage, setNewMessage] = useState("");
-  const [creating, setCreating] = useState(false);
-  const [createError, setCreateError] = useState("");
+  const [severities, setSeverities]     = useState<{ id: number; name: string }[]>([]);
+  const [newDeviceId, setNewDeviceId]   = useState("");
+  const [newSeverityId, setNewSeverityId] = useState("");
+  const [newMessage, setNewMessage]     = useState("");
+  const [creating, setCreating]         = useState(false);
+  const [createError, setCreateError]   = useState("");
 
-  // ── Modal de confirmación ──────────────────────────────────────────────────
-  const [confirmDelete, setConfirmDelete] = useState<string | number | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Alert | null>(null);
+  const [deleting, setDeleting]           = useState(false);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -49,6 +51,7 @@ function Alerts() {
       return;
     }
     fetchAlerts();
+    fetchSeverities();
   }, [user, permissions]);
 
   const fetchAlerts = async () => {
@@ -61,6 +64,20 @@ function Alerts() {
       setError("No se pudieron cargar las alertas.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSeverities = async () => {
+    try {
+      const response = await api.get("/severities");
+      const data = response.data;
+      setSeverities(data);
+      if (data.length > 0) {
+        setNewSeverityId(String(data[0].id));
+      }
+    } catch {
+      // si falla usa CRITICAL por defecto
+      setNewSeverityId("1");
     }
   };
 
@@ -80,7 +97,7 @@ function Alerts() {
   };
 
   const handleCreate = async () => {
-    if (!newDeviceId || !newMessage) {
+    if (!newDeviceId || !newMessage || !newSeverityId) {
       setCreateError("Completa todos los campos.");
       return;
     }
@@ -94,8 +111,8 @@ function Alerts() {
       } as any);
       setAlerts((prev) => [created, ...prev]);
       setNewDeviceId("");
-      setNewSeverityId("1");
       setNewMessage("");
+      if (severities.length > 0) setNewSeverityId(String(severities[0].id));
     } catch {
       setCreateError("Error al crear la alerta.");
     } finally {
@@ -103,19 +120,29 @@ function Alerts() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
+  const handleDelete = async () => {
+    if (!confirmDelete) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/alerts/${confirmDelete.id}`);
+      setAlerts((prev) => prev.filter((a) => String(a.id) !== String(confirmDelete.id)));
+      setConfirmDelete(null);
+    } catch {
+      setError("No se pudo eliminar la alerta.");
+      setConfirmDelete(null);
+    } finally {
+      setDeleting(false);
+    }
   };
+
+  const handleLogout = () => { logout(); navigate("/login"); };
 
   const isResolved = (a: Alert) =>
     String(a.status).toLowerCase() === "resolved" ||
     (a as unknown as { resolved?: boolean }).resolved === true;
 
-  const getSeverityLabel = (a: Alert): string => {
-    const s = String(a.severity || "").toUpperCase();
-    return s || "INFO";
-  };
+  const getSeverityLabel = (a: Alert): string =>
+    String(a.severity || "").toUpperCase() || "—";
 
   let filtered = [...alerts];
   if (searchTerm.trim()) {
@@ -138,14 +165,12 @@ function Alerts() {
     );
   }
 
-  const total = alerts.length;
+  const total    = alerts.length;
   const critical = alerts.filter((a) => getSeverityLabel(a) === "CRITICAL").length;
-  const open = alerts.filter((a) => !isResolved(a)).length;
+  const open     = alerts.filter((a) => !isResolved(a)).length;
   const resolved = alerts.filter((a) => isResolved(a)).length;
 
-  const canCreate =
-    permissions?.canEdit &&
-    (user?.role === "admin" || user?.role === "technician");
+  const canCreate = permissions?.canEdit && (user?.role === "admin" || user?.role === "technician");
   const canDelete = permissions?.canDelete;
 
   if (!user || !permissions) {
@@ -166,18 +191,18 @@ function Alerts() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         .db-root { min-height: 100vh; background: #f1f5f9; font-family: 'DM Sans', sans-serif; display: flex; flex-direction: column; }
         .db-nav { background: #0f172a; padding: 0 2rem; position: sticky; top: 0; z-index: 200; display: flex; align-items: center; justify-content: space-between; height: 60px; border-bottom: 1px solid rgba(255,255,255,0.06); }
-        .db-nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .db-nav-brand { display: flex; align-items: center; gap: 10px; }
         .db-nav-brand-icon { width: 34px; height: 34px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
         .db-nav-brand-text { font-family: 'Fraunces', serif; font-size: 1.05rem; font-weight: 700; color: #fff; letter-spacing: -0.3px; white-space: nowrap; }
         .db-nav-links { display: flex; align-items: center; gap: 4px; list-style: none; margin: 0 auto 0 2rem; }
-        .db-nav-link { color: #94a3b8; text-decoration: none; font-size: 0.875rem; font-weight: 500; padding: 6px 12px; border-radius: 6px; transition: all 0.15s; cursor: pointer; background: none; border: none; }
+        .db-nav-link { color: #94a3b8; font-size: 0.875rem; font-weight: 500; padding: 6px 12px; border-radius: 6px; transition: all 0.15s; cursor: pointer; background: none; border: none; }
         .db-nav-link:hover, .db-nav-link.active { color: #fff; background: rgba(255,255,255,0.08); }
         .db-nav-right { display: flex; align-items: center; gap: 10px; }
         .db-nav-user { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 6px 12px; }
         .db-nav-avatar { width: 28px; height: 28px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
         .db-nav-username { font-size: 0.8rem; font-weight: 600; color: #e2e8f0; }
         .db-role-pill { font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; color: #fff; }
-        .db-btn-ghost { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #cbd5e1; padding: 6px 14px; border-radius: 7px; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
+        .db-btn-ghost { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #cbd5e1; padding: 6px 14px; border-radius: 7px; font-size: 0.8rem; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
         .db-btn-ghost:hover { background: rgba(255,255,255,0.12); color: #fff; }
         .db-main { flex: 1; max-width: 1380px; width: 100%; margin: 0 auto; padding: 2rem 2rem 3rem; }
         .db-page-title { font-family: 'Fraunces', serif; font-size: 2rem; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; margin-bottom: 4px; }
@@ -192,7 +217,7 @@ function Alerts() {
         .db-card-title { font-size: 1rem; font-weight: 700; color: #0f172a; }
         .db-card-sub { font-size: 0.8rem; color: #94a3b8; margin-top: 2px; }
         .db-card-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-        .db-input { padding: 7px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 0.85rem; color: #0f172a; background: #f8fafc; outline: none; transition: border-color 0.15s; font-family: 'DM Sans', sans-serif; min-width: 180px; }
+        .db-input { padding: 7px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 0.85rem; color: #0f172a; background: #f8fafc; outline: none; font-family: 'DM Sans', sans-serif; min-width: 180px; }
         .db-input:focus { border-color: #3b82f6; background: #fff; }
         .db-select { padding: 7px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 0.85rem; color: #0f172a; background: #f8fafc; outline: none; cursor: pointer; font-family: 'DM Sans', sans-serif; }
         .db-btn-primary { background: #3b82f6; color: #fff; border: none; padding: 7px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
@@ -238,91 +263,41 @@ function Alerts() {
         .db-footer-links { display: flex; gap: 16px; }
         .db-footer-link { font-size: 0.75rem; color: #475569; cursor: pointer; text-decoration: none; background: none; border: none; font-family: 'DM Sans', sans-serif; }
         .db-footer-link:hover { color: #94a3b8; }
-
-        /* ── Modal overlay ───────────────────────────────────────────────── */
-        .db-modal-overlay {
-          position: fixed; inset: 0; background: rgba(15,23,42,0.5);
-          z-index: 9999; display: flex; align-items: center; justify-content: center;
-          animation: fadeIn 0.15s ease;
-        }
-        .db-modal {
-          background: #fff; border-radius: 18px; padding: 2rem 2rem 1.75rem;
-          width: 380px; max-width: calc(100vw - 2rem); text-align: center;
-          box-shadow: 0 24px 64px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.08);
-          animation: slideUp 0.2s ease;
-        }
-        .db-modal-icon {
-          width: 56px; height: 56px; border-radius: 50%; background: #fef2f2;
-          display: flex; align-items: center; justify-content: center;
-          margin: 0 auto 1.1rem; font-size: 24px;
-        }
-        .db-modal-title {
-          font-family: 'Fraunces', serif; font-size: 1.2rem; font-weight: 800;
-          color: #0f172a; margin-bottom: 8px;
-        }
-        .db-modal-body {
-          font-size: 0.875rem; color: #64748b; line-height: 1.6;
-          margin-bottom: 1.5rem;
-        }
+        .db-modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.55); z-index: 9999; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.15s ease; backdrop-filter: blur(3px); }
+        .db-modal { background: #fff; border-radius: 18px; padding: 2rem; width: 380px; max-width: calc(100vw - 2rem); text-align: center; box-shadow: 0 24px 64px rgba(0,0,0,0.18); animation: slideUp 0.2s ease; }
+        .db-modal-icon { width: 56px; height: 56px; border-radius: 50%; background: #fef2f2; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.1rem; font-size: 24px; }
+        .db-modal-title { font-family: 'Fraunces', serif; font-size: 1.2rem; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+        .db-modal-body { font-size: 0.875rem; color: #64748b; line-height: 1.6; margin-bottom: 1.5rem; }
         .db-modal-actions { display: flex; gap: 10px; }
-        .db-modal-cancel {
-          flex: 1; padding: 10px 0; border-radius: 9px; font-size: 0.875rem;
-          font-weight: 600; cursor: pointer; border: 1.5px solid #e2e8f0;
-          background: #fff; color: #475569; font-family: 'DM Sans', sans-serif;
-          transition: all 0.15s;
-        }
-        .db-modal-cancel:hover { background: #f8fafc; border-color: #cbd5e1; }
-        .db-modal-confirm {
-          flex: 1; padding: 10px 0; border-radius: 9px; font-size: 0.875rem;
-          font-weight: 700; cursor: pointer; border: none;
-          background: #dc2626; color: #fff; font-family: 'DM Sans', sans-serif;
-          transition: all 0.15s;
-        }
+        .db-modal-cancel { flex: 1; padding: 10px 0; border-radius: 9px; font-size: 0.875rem; font-weight: 600; cursor: pointer; border: 1.5px solid #e2e8f0; background: #fff; color: #475569; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+        .db-modal-cancel:hover { background: #f8fafc; }
+        .db-modal-cancel:disabled { opacity: 0.5; cursor: not-allowed; }
+        .db-modal-confirm { flex: 1; padding: 10px 0; border-radius: 9px; font-size: 0.875rem; font-weight: 700; cursor: pointer; border: none; background: #dc2626; color: #fff; font-family: 'DM Sans', sans-serif; transition: background 0.15s; }
         .db-modal-confirm:hover { background: #b91c1c; }
-
+        .db-modal-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
         @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(16px) scale(0.97); } to { opacity: 1; transform: none; } }
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
 
-      {/* ── MODAL DE CONFIRMACIÓN ──────────────────────────────────────────── */}
+      {/* MODAL ELIMINAR */}
       {confirmDelete !== null && (
-        <div
-          className="db-modal-overlay"
-          onClick={() => setConfirmDelete(null)}
-        >
-          <div
-            className="db-modal"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="modal-title"
-          >
+        <div className="db-modal-overlay" onClick={() => !deleting && setConfirmDelete(null)}>
+          <div className="db-modal" onClick={(e) => e.stopPropagation()}>
             <div className="db-modal-icon">🗑️</div>
-            <div className="db-modal-title" id="modal-title">
-              ¿Eliminar esta alerta?
-            </div>
+            <div className="db-modal-title">¿Eliminar esta alerta?</div>
             <p className="db-modal-body">
-              Esta acción <strong>no se puede deshacer</strong>. La alerta será
-              eliminada permanentemente del sistema.
+              Vas a eliminar la alerta <strong>#{confirmDelete.id}</strong>:<br />
+              <span style={{ fontStyle: "italic", color: "#94a3b8" }}>"{confirmDelete.message}"</span>
+              <br /><br />
+              Esta acción <strong>no se puede deshacer</strong>.
             </p>
             <div className="db-modal-actions">
-              <button
-                className="db-modal-cancel"
-                onClick={() => setConfirmDelete(null)}
-              >
+              <button className="db-modal-cancel" onClick={() => setConfirmDelete(null)} disabled={deleting}>
                 Cancelar
               </button>
-              <button
-                className="db-modal-confirm"
-                onClick={() => {
-                  setAlerts((prev) =>
-                    prev.filter((a) => String(a.id) !== String(confirmDelete))
-                  );
-                  setConfirmDelete(null);
-                }}
-              >
-                Sí, eliminar
+              <button className="db-modal-confirm" onClick={handleDelete} disabled={deleting}>
+                {deleting ? "Eliminando..." : "Sí, eliminar"}
               </button>
             </div>
           </div>
@@ -362,35 +337,22 @@ function Alerts() {
         <h1 className="db-page-title">Alertas</h1>
         <p className="db-page-sub">Monitoreo de alertas del sistema hospitalario</p>
 
-        {/* Stats */}
         <div className="db-stats">
           <div className="db-stat">
             <div className="db-stat-icon" style={{ background: "#fef2f2" }}>🚨</div>
-            <div>
-              <div className="db-stat-label">Total alertas</div>
-              <div className="db-stat-value" style={{ color: "#ef4444" }}>{total}</div>
-            </div>
+            <div><div className="db-stat-label">Total alertas</div><div className="db-stat-value" style={{ color: "#ef4444" }}>{total}</div></div>
           </div>
           <div className="db-stat">
             <div className="db-stat-icon" style={{ background: "#fff1f2" }}>⚠️</div>
-            <div>
-              <div className="db-stat-label">Críticas</div>
-              <div className="db-stat-value" style={{ color: "#be123c" }}>{critical}</div>
-            </div>
+            <div><div className="db-stat-label">Críticas</div><div className="db-stat-value" style={{ color: "#be123c" }}>{critical}</div></div>
           </div>
           <div className="db-stat">
             <div className="db-stat-icon" style={{ background: "#fffbeb" }}>🔶</div>
-            <div>
-              <div className="db-stat-label">Abiertas</div>
-              <div className="db-stat-value" style={{ color: "#d97706" }}>{open}</div>
-            </div>
+            <div><div className="db-stat-label">Abiertas</div><div className="db-stat-value" style={{ color: "#d97706" }}>{open}</div></div>
           </div>
           <div className="db-stat">
             <div className="db-stat-icon" style={{ background: "#f0fdf4" }}>✅</div>
-            <div>
-              <div className="db-stat-label">Resueltas</div>
-              <div className="db-stat-value" style={{ color: "#15803d" }}>{resolved}</div>
-            </div>
+            <div><div className="db-stat-label">Resueltas</div><div className="db-stat-value" style={{ color: "#15803d" }}>{resolved}</div></div>
           </div>
         </div>
 
@@ -421,9 +383,12 @@ function Alerts() {
                   value={newSeverityId}
                   onChange={(e) => setNewSeverityId(e.target.value)}
                 >
-                  <option value="1">CRITICAL</option>
-                  <option value="2">WARNING</option>
-                  <option value="3">INFO</option>
+                  {severities.length > 0
+                    ? severities.map((s) => (
+                        <option key={s.id} value={String(s.id)}>{s.name}</option>
+                      ))
+                    : <option value="">Cargando...</option>
+                  }
                 </select>
               </div>
               <div className="db-form-group" style={{ gridColumn: "1 / -1" }}>
@@ -437,17 +402,9 @@ function Alerts() {
                 />
               </div>
             </div>
-            {createError && (
-              <div className="db-error" style={{ margin: "0 1.5rem 1rem" }}>
-                ✕ {createError}
-              </div>
-            )}
+            {createError && <div className="db-error" style={{ margin: "0 1.5rem 1rem" }}>✕ {createError}</div>}
             <div className="db-form-footer">
-              <button
-                className="db-btn-primary"
-                onClick={handleCreate}
-                disabled={creating}
-              >
+              <button className="db-btn-primary" onClick={handleCreate} disabled={creating}>
                 {creating ? "Creando..." : "+ Crear alerta"}
               </button>
             </div>
@@ -462,13 +419,7 @@ function Alerts() {
               <div className="db-card-sub">Todas las alertas registradas en el sistema</div>
             </div>
             <div className="db-card-actions">
-              <input
-                className="db-input"
-                type="text"
-                placeholder="Buscar alerta..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+              <input className="db-input" type="text" placeholder="Buscar alerta..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
               <select className="db-select" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
                 <option value="all">Todos los estados</option>
                 <option value="open">Abierta</option>
@@ -476,9 +427,9 @@ function Alerts() {
               </select>
               <select className="db-select" value={filterSeverity} onChange={(e) => setFilterSeverity(e.target.value)}>
                 <option value="all">Todas las severidades</option>
-                <option value="critical">CRITICAL</option>
-                <option value="warning">WARNING</option>
-                <option value="info">INFO</option>
+                {severities.map((s) => (
+                  <option key={s.id} value={s.name.toLowerCase()}>{s.name}</option>
+                ))}
               </select>
               <button className="db-btn-primary" onClick={fetchAlerts} disabled={loading}>
                 {loading ? "⟳ Cargando..." : "⟳ Actualizar"}
@@ -486,13 +437,7 @@ function Alerts() {
             </div>
           </div>
 
-          {loading && (
-            <div className="db-spinner-wrap">
-              <div className="db-spinner" />
-              <p>Cargando alertas...</p>
-            </div>
-          )}
-
+          {loading && <div className="db-spinner-wrap"><div className="db-spinner" /><p>Cargando alertas...</p></div>}
           {error && <div className="db-error">✕ {error}</div>}
 
           {!loading && !error && filtered.length === 0 && (
@@ -508,55 +453,28 @@ function Alerts() {
               <table className="db-table">
                 <thead>
                   <tr>
-                    <th>ID</th>
-                    <th>Dispositivo</th>
-                    <th>Severidad</th>
-                    <th>Mensaje</th>
-                    <th>Estado</th>
-                    <th>Fecha</th>
-                    <th>Acciones</th>
+                    <th>ID</th><th>Dispositivo</th><th>Severidad</th><th>Mensaje</th><th>Estado</th><th>Fecha</th><th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((alert) => {
                     const sev = getSeverityLabel(alert).toLowerCase();
-                    const alertResolved = isResolved(alert);
+                    const res = isResolved(alert);
                     return (
                       <tr key={alert.id}>
                         <td><span className="db-mono">{alert.id}</span></td>
                         <td><strong>Disp. #{alert.device_id}</strong></td>
-                        <td>
-                          <span className={`db-badge db-badge-${sev}`}>
-                            {getSeverityLabel(alert)}
-                          </span>
-                        </td>
+                        <td><span className={`db-badge db-badge-${sev}`}>{getSeverityLabel(alert)}</span></td>
                         <td><span className="db-msg">{alert.message}</span></td>
-                        <td>
-                          <span className={`db-badge ${alertResolved ? "db-badge-resolved" : "db-badge-open"}`}>
-                            {alertResolved ? "Resuelta" : "Abierta"}
-                          </span>
-                        </td>
-                        <td style={{ fontSize: "0.78rem", color: "#64748b" }}>
-                          {alert.created_at
-                            ? new Date(alert.created_at).toLocaleString("es-CO")
-                            : "—"}
-                        </td>
+                        <td><span className={`db-badge ${res ? "db-badge-resolved" : "db-badge-open"}`}>{res ? "Resuelta" : "Abierta"}</span></td>
+                        <td style={{ fontSize: "0.78rem", color: "#64748b" }}>{alert.created_at ? new Date(alert.created_at).toLocaleString("es-CO") : "—"}</td>
                         <td>
                           <div className="db-actions">
-                            <button
-                              className="db-btn-success"
-                              onClick={() => handleResolve(alert.id)}
-                              disabled={alertResolved}
-                              title={alertResolved ? "Ya resuelta" : "Marcar como resuelta"}
-                            >
+                            <button className="db-btn-success" onClick={() => handleResolve(alert.id)} disabled={res} title={res ? "Ya resuelta" : "Marcar como resuelta"}>
                               ✔ Resolver
                             </button>
                             {canDelete && (
-                              <button
-                                className="db-btn-del"
-                                onClick={() => setConfirmDelete(alert.id)}
-                                title="Eliminar alerta"
-                              >
+                              <button className="db-btn-del" onClick={() => setConfirmDelete(alert)} title="Eliminar alerta">
                                 🗑️
                               </button>
                             )}
@@ -572,7 +490,6 @@ function Alerts() {
         </div>
       </main>
 
-      {/* FOOTER */}
       <footer className="db-footer">
         <div>
           <div className="db-footer-brand">🏥 Hospital San Rafael</div>
