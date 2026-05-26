@@ -1,17 +1,178 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getDevices, deleteDevice, getDeviceTypes } from "../services/deviceService";
 import { logout, getUserProfile } from "../services/authService";
 import { getLocations } from "../services/locationService";
 import { getAlerts } from "../services/alertService";
+import { getMetrics, getMetricTypes } from "../services/metricsService";
 import DeviceDetailsModal from "../components/DeviceDetailsModal";
 import type { Device, DeviceType } from "../types/device";
 import type { User, RolePermissions } from "../types/auth";
 import type { HospitalLocation } from "../types/location";
 import type { Alert } from "../types/alert";
+import type { Metric, MetricType } from "../types/metric";
 import { roleInfo, rolePermissionsMap } from "../utils/permissions";
 import logoHSF from "../assets/logoHSF.jpg";
 import "./management.css";
+import Chart from "chart.js/auto";
+
+const CHART_COLORS = ["#378ADD", "#1D9E75", "#BA7517", "#D4537E", "#7F77DD", "#D85A30"];
+
+function MetricsCharts({ metrics, metricTypes }: { metrics: Metric[]; metricTypes: MetricType[] }) {
+  const barRef = useRef<HTMLCanvasElement>(null);
+  const lineRef = useRef<HTMLCanvasElement>(null);
+  const barChart = useRef<Chart | null>(null);
+  const lineChart = useRef<Chart | null>(null);
+
+  const getTypeName = (id: string | number) =>
+    metricTypes.find((t) => String(t.id) === String(id))?.name || `Tipo ${id}`;
+
+  const grouped: Record<string, { values: number[]; unit: string }> = {};
+  metrics.forEach((m) => {
+    const key = m.metric_type || getTypeName(m.metric_type_id);
+    if (!grouped[key]) grouped[key] = { values: [], unit: m.unit || "" };
+    grouped[key].values.push(m.value);
+  });
+
+  const types = Object.keys(grouped);
+
+  useEffect(() => {
+    if (!types.length) return;
+
+    const avgs = types.map((t) =>
+      parseFloat((grouped[t].values.reduce((a, b) => a + b, 0) / grouped[t].values.length).toFixed(1))
+    );
+
+    if (barRef.current) {
+      barChart.current?.destroy();
+      barChart.current = new Chart(barRef.current, {
+        type: "bar",
+        data: {
+          labels: types,
+          datasets: [{
+            label: "Promedio",
+            data: avgs,
+            backgroundColor: types.map((_, i) => CHART_COLORS[i % CHART_COLORS.length] + "cc"),
+            borderColor: types.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]),
+            borderWidth: 1.5,
+            borderRadius: 6,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { grid: { color: "rgba(128,128,128,0.1)" }, ticks: { font: { size: 11 } } },
+            x: { grid: { display: false }, ticks: { font: { size: 11 }, autoSkip: false } },
+          },
+        },
+      });
+    }
+
+    if (lineRef.current) {
+      lineChart.current?.destroy();
+      lineChart.current = new Chart(lineRef.current, {
+        type: "line",
+        data: {
+          labels: Array.from({ length: Math.max(...types.map(t => grouped[t].values.length)) }, (_, i) => `#${i + 1}`),
+          datasets: types.slice(0, 4).map((t, i) => ({
+            label: t,
+            data: grouped[t].values,
+            borderColor: CHART_COLORS[i % CHART_COLORS.length],
+            backgroundColor: "transparent",
+            tension: 0.4,
+            pointRadius: 4,
+            pointBackgroundColor: CHART_COLORS[i % CHART_COLORS.length],
+            borderWidth: 2,
+            borderDash: i === 1 ? [5, 3] : i === 2 ? [2, 2] : [],
+          })),
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { grid: { color: "rgba(128,128,128,0.1)" }, ticks: { font: { size: 11 } } },
+            x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+          },
+        },
+      });
+    }
+
+    return () => {
+      barChart.current?.destroy();
+      lineChart.current?.destroy();
+    };
+  }, [metrics, metricTypes]);
+
+  if (!types.length) return null;
+
+  return (
+    <div className="db-card" style={{ marginTop: "1.75rem" }}>
+      <div className="db-card-head">
+        <div>
+          <div className="db-card-title">Métricas del sistema</div>
+          <div className="db-card-sub">Últimas lecturas por tipo de métrica</div>
+        </div>
+      </div>
+      <div style={{ padding: "1.25rem" }}>
+        {/* Metric summary cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: "1.5rem" }}>
+          {types.map((t, i) => {
+            const avg = (grouped[t].values.reduce((a, b) => a + b, 0) / grouped[t].values.length).toFixed(1);
+            return (
+              <div key={t} style={{ background: "#f8fafc", borderRadius: 10, padding: "1rem", border: "1px solid #e2e8f0" }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>{t}</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: CHART_COLORS[i % CHART_COLORS.length] }}>
+                  {avg}
+                  <span style={{ fontSize: 12, color: "#94a3b8", marginLeft: 4 }}>{grouped[t].unit}</span>
+                </div>
+                <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>{grouped[t].values.length} lecturas</div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Bar chart */}
+        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "1.25rem", marginBottom: "1rem" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 12 }}>
+            Promedio por tipo
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 12 }}>
+            {types.map((t, i) => (
+              <span key={t} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748b" }}>
+                <span style={{ width: 10, height: 10, borderRadius: 2, background: CHART_COLORS[i % CHART_COLORS.length], display: "inline-block" }} />
+                {t}
+              </span>
+            ))}
+          </div>
+          <div style={{ position: "relative", width: "100%", height: 220 }}>
+            <canvas ref={barRef} role="img" aria-label="Gráfica de barras con promedio por tipo de métrica">Promedio por tipo de métrica.</canvas>
+          </div>
+        </div>
+
+        {/* Line chart */}
+        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "1.25rem" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 12 }}>
+            Tendencia de lecturas
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 12 }}>
+            {types.slice(0, 4).map((t, i) => (
+              <span key={t} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748b" }}>
+                <span style={{ width: 16, height: 3, borderRadius: 2, background: CHART_COLORS[i % CHART_COLORS.length], display: "inline-block" }} />
+                {t}
+              </span>
+            ))}
+          </div>
+          <div style={{ position: "relative", width: "100%", height: 220 }}>
+            <canvas ref={lineRef} role="img" aria-label="Gráfica de líneas con tendencia de métricas">Tendencia de las últimas métricas.</canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -20,6 +181,8 @@ function Dashboard() {
   const [deviceTypes, setDeviceTypes] = useState<DeviceType[]>([]);
   const [locations, setLocations] = useState<HospitalLocation[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [metrics, setMetrics] = useState<Metric[]>([]);
+  const [metricTypes, setMetricTypes] = useState<MetricType[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -30,7 +193,7 @@ function Dashboard() {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("all");
   const [detailDevice, setDetailDevice] = useState<Device | null>(null);
-
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -51,31 +214,37 @@ function Dashboard() {
       try {
         setLoading(true);
         setError("");
+
         const devicesData = await getDevices();
         if (isMounted.current) setDevices(devicesData);
+
         try {
           const typesData = await getDeviceTypes();
           if (isMounted.current) setDeviceTypes(typesData);
-        } catch (error) {
-          console.warn("No se pudieron cargar los tipos de dispositivos", error);
-        }
+        } catch (e) { console.warn("Tipos de dispositivos", e); }
+
         try {
           const locationsData = await getLocations();
           if (isMounted.current) setLocations(locationsData);
-        } catch (error) {
-          console.warn("No se pudieron cargar las ubicaciones", error);
-        }
+        } catch (e) { console.warn("Ubicaciones", e); }
+
+        try {
+          const [metricsData, metricTypesData] = await Promise.all([getMetrics(), getMetricTypes()]);
+          if (isMounted.current) {
+            setMetrics(metricsData);
+            setMetricTypes(metricTypesData);
+          }
+        } catch (e) { console.warn("Métricas", e); }
+
         if (permissions?.canViewAlerts) {
           try {
             const alertsData = await getAlerts();
             if (isMounted.current) setAlerts(alertsData);
-          } catch (error) {
-            console.warn("No se pudieron cargar las alertas", error);
-          }
+          } catch (e) { console.warn("Alertas", e); }
         }
-      } catch (error) {
+      } catch (e) {
         if (isMounted.current) setError("Error al cargar los datos. Por favor, intenta de nuevo.");
-        console.warn("Error general al cargar datos del dashboard", error);
+        console.warn("Error general", e);
       } finally {
         if (isMounted.current) setLoading(false);
       }
@@ -87,14 +256,10 @@ function Dashboard() {
     const isMounted = { current: true };
     if (user && permissions) {
       Promise.resolve().then(() => {
-        if (isMounted.current) {
-          void fetchAllData(isMounted);
-        }
+        if (isMounted.current) void fetchAllData(isMounted);
       });
     }
-    return () => {
-      isMounted.current = false;
-    };
+    return () => { isMounted.current = false; };
   }, [user, permissions, fetchAllData]);
 
   let filteredDevices = [...devices];
@@ -116,9 +281,7 @@ function Dashboard() {
     );
   }
   if (selectedLocation !== "all") {
-    filteredDevices = filteredDevices.filter(
-      (d) => String(d.location_id) === String(selectedLocation)
-    );
+    filteredDevices = filteredDevices.filter((d) => String(d.location_id) === String(selectedLocation));
   }
 
   const handleRefresh = async () => {
@@ -131,19 +294,18 @@ function Dashboard() {
         try {
           const alertsData = await getAlerts();
           setAlerts(alertsData);
-        } catch (error) {
-          console.warn("No se pudieron actualizar las alertas", error);
-        }
+        } catch (e) { console.warn("Alertas refresh", e); }
       }
-    } catch (error) {
-      console.warn("No se pudieron actualizar los dispositivos", error);
+    } catch (e) {
+      console.warn("Refresh", e);
       setError("No se pudieron actualizar los dispositivos.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogout = () => { logout(); navigate("/login"); };
+  const handleLogout = () => { setShowLogoutModal(true); };
+  const confirmLogout = () => { logout(); navigate("/login"); };
 
   const handleDeleteDevice = async (deviceId: string | number) => {
     if (!permissions?.canDelete) return;
@@ -198,492 +360,80 @@ function Dashboard() {
     <div className="db-root">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,700;0,800;1,700&display=swap');
-
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        .db-root {
-          min-height: 100vh;
-          background: #f1f5f9;
-          font-family: 'DM Sans', sans-serif;
-          display: flex;
-          flex-direction: column;
-        }
-
-        /* ── NAVBAR ── */
-        .db-nav {
-          background: #0f172a;
-          padding: 0 2rem;
-          position: sticky;
-          top: 0;
-          z-index: 200;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          height: 60px;
-          border-bottom: 1px solid rgba(255,255,255,0.06);
-        }
-
-        .db-nav-brand {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          text-decoration: none;
-        }
-
-        .db-nav-brand-icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 4px;
-          display: block;
-          object-fit: contain;
-          background: #fff;
-          flex-shrink: 0;
-        }
-
-        .db-nav-brand-text {
-          font-family: 'Fraunces', serif;
-          font-size: 1.05rem;
-          font-weight: 700;
-          color: #fff;
-          letter-spacing: -0.3px;
-          white-space: nowrap;
-        }
-
-        .db-nav-links {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          list-style: none;
-          margin: 0 auto 0 2rem;
-        }
-
-        .db-nav-link {
-          color: #94a3b8;
-          text-decoration: none;
-          font-size: 0.875rem;
-          font-weight: 500;
-          padding: 6px 12px;
-          border-radius: 6px;
-          transition: all 0.15s;
-          cursor: pointer;
-          background: none;
-          border: none;
-        }
-
-        .db-nav-link:hover, .db-nav-link.active {
-          color: #fff;
-          background: rgba(255,255,255,0.08);
-        }
-
-        .db-nav-right {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .db-nav-user {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          background: rgba(255,255,255,0.06);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 8px;
-          padding: 6px 12px;
-        }
-
-        .db-nav-avatar {
-          width: 28px;
-          height: 28px;
-          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-          border-radius: 6px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 13px;
-        }
-
-        .db-nav-username {
-          font-size: 0.8rem;
-          font-weight: 600;
-          color: #e2e8f0;
-        }
-
-        .db-role-pill {
-          font-size: 0.65rem;
-          font-weight: 700;
-          padding: 2px 8px;
-          border-radius: 20px;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          color: #fff;
-        }
-
-        .db-btn-ghost {
-          background: rgba(255,255,255,0.06);
-          border: 1px solid rgba(255,255,255,0.1);
-          color: #cbd5e1;
-          padding: 6px 14px;
-          border-radius: 7px;
-          font-size: 0.8rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.15s;
-          font-family: 'DM Sans', sans-serif;
-          white-space: nowrap;
-        }
-
+        .db-root { min-height: 100vh; background: #f1f5f9; font-family: 'DM Sans', sans-serif; display: flex; flex-direction: column; }
+        .db-nav { background: #0f172a; padding: 0 2rem; position: sticky; top: 0; z-index: 200; display: flex; align-items: center; justify-content: space-between; height: 60px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .db-nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .db-nav-brand-icon { width: 40px; height: 40px; border-radius: 4px; display: block; object-fit: contain; background: #fff; flex-shrink: 0; }
+        .db-nav-brand-text { font-family: 'Fraunces', serif; font-size: 1.05rem; font-weight: 700; color: #fff; letter-spacing: -0.3px; white-space: nowrap; }
+        .db-nav-links { display: flex; align-items: center; gap: 4px; list-style: none; margin: 0 auto 0 2rem; }
+        .db-nav-link { color: #94a3b8; text-decoration: none; font-size: 0.875rem; font-weight: 500; padding: 6px 12px; border-radius: 6px; transition: all 0.15s; cursor: pointer; background: none; border: none; }
+        .db-nav-link:hover, .db-nav-link.active { color: #fff; background: rgba(255,255,255,0.08); }
+        .db-nav-right { display: flex; align-items: center; gap: 10px; }
+        .db-nav-user { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 6px 12px; }
+        .db-nav-avatar { width: 28px; height: 28px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+        .db-nav-username { font-size: 0.8rem; font-weight: 600; color: #e2e8f0; }
+        .db-role-pill { font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; color: #fff; }
+        .db-btn-ghost { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #cbd5e1; padding: 6px 14px; border-radius: 7px; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
         .db-btn-ghost:hover { background: rgba(255,255,255,0.12); color: #fff; }
-
-        /* ── MAIN ── */
-        .db-main {
-          flex: 1;
-          max-width: 1380px;
-          width: 100%;
-          margin: 0 auto;
-          padding: 2rem 2rem 3rem;
-        }
-
-        /* ── PAGE HEADER ── */
-        .db-page-header {
-          margin-bottom: 2rem;
-        }
-
-        .db-page-title {
-          font-family: 'Fraunces', serif;
-          font-size: 2rem;
-          font-weight: 800;
-          color: #0f172a;
-          letter-spacing: -0.5px;
-          margin-bottom: 4px;
-        }
-
-        .db-page-sub {
-          color: #64748b;
-          font-size: 0.9rem;
-        }
-
-        /* ── STATS ── */
-        .db-stats {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 1rem;
-          margin-bottom: 1.75rem;
-        }
-
-        .db-stat {
-          background: #fff;
-          border-radius: 12px;
-          padding: 1.25rem 1.5rem;
-          border: 1px solid #e2e8f0;
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          transition: box-shadow 0.2s, transform 0.2s;
-        }
-
+        .db-main { flex: 1; max-width: 1380px; width: 100%; margin: 0 auto; padding: 2rem 2rem 3rem; }
+        .db-page-header { margin-bottom: 2rem; }
+        .db-page-title { font-family: 'Fraunces', serif; font-size: 2rem; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; margin-bottom: 4px; }
+        .db-page-sub { color: #64748b; font-size: 0.9rem; }
+        .db-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.75rem; }
+        .db-stat { background: #fff; border-radius: 12px; padding: 1.25rem 1.5rem; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 1rem; transition: box-shadow 0.2s, transform 0.2s; }
         .db-stat:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.07); transform: translateY(-2px); }
-
-        .db-stat-icon {
-          width: 46px;
-          height: 46px;
-          border-radius: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 1.3rem;
-          flex-shrink: 0;
-        }
-
-        .db-stat-label {
-          font-size: 0.72rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.6px;
-          color: #94a3b8;
-          margin-bottom: 3px;
-        }
-
-        .db-stat-value {
-          font-family: 'Fraunces', serif;
-          font-size: 1.75rem;
-          font-weight: 800;
-          line-height: 1;
-        }
-
-        /* ── CARD ── */
-        .db-card {
-          background: #fff;
-          border-radius: 14px;
-          border: 1px solid #e2e8f0;
-          overflow: hidden;
-        }
-
-        .db-card-head {
-          padding: 1.25rem 1.5rem;
-          border-bottom: 1px solid #f1f5f9;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          flex-wrap: wrap;
-          gap: 12px;
-        }
-
-        .db-card-title {
-          font-size: 1rem;
-          font-weight: 700;
-          color: #0f172a;
-        }
-
-        .db-card-sub {
-          font-size: 0.8rem;
-          color: #94a3b8;
-          margin-top: 2px;
-        }
-
-        .db-card-actions {
-          display: flex;
-          gap: 8px;
-          align-items: center;
-          flex-wrap: wrap;
-        }
-
-        .db-input {
-          padding: 7px 12px;
-          border: 1.5px solid #e2e8f0;
-          border-radius: 8px;
-          font-size: 0.85rem;
-          color: #0f172a;
-          background: #f8fafc;
-          outline: none;
-          transition: border-color 0.15s;
-          font-family: 'DM Sans', sans-serif;
-          min-width: 180px;
-        }
-
+        .db-stat-icon { width: 46px; height: 46px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+        .db-stat-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #94a3b8; margin-bottom: 3px; }
+        .db-stat-value { font-family: 'Fraunces', serif; font-size: 1.75rem; font-weight: 800; line-height: 1; }
+        .db-card { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; }
+        .db-card-head { padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+        .db-card-title { font-size: 1rem; font-weight: 700; color: #0f172a; }
+        .db-card-sub { font-size: 0.8rem; color: #94a3b8; margin-top: 2px; }
+        .db-card-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .db-input { padding: 7px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 0.85rem; color: #0f172a; background: #f8fafc; outline: none; transition: border-color 0.15s; font-family: 'DM Sans', sans-serif; min-width: 180px; }
         .db-input:focus { border-color: #3b82f6; background: #fff; }
-
-        .db-select {
-          padding: 7px 12px;
-          border: 1.5px solid #e2e8f0;
-          border-radius: 8px;
-          font-size: 0.85rem;
-          color: #0f172a;
-          background: #f8fafc;
-          outline: none;
-          cursor: pointer;
-          font-family: 'DM Sans', sans-serif;
-          transition: border-color 0.15s;
-        }
-
+        .db-select { padding: 7px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 0.85rem; color: #0f172a; background: #f8fafc; outline: none; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: border-color 0.15s; }
         .db-select:focus { border-color: #3b82f6; }
-
-        .db-btn-primary {
-          background: #3b82f6;
-          color: #fff;
-          border: none;
-          padding: 7px 16px;
-          border-radius: 8px;
-          font-size: 0.85rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.15s, transform 0.15s;
-          font-family: 'DM Sans', sans-serif;
-          white-space: nowrap;
-        }
-
+        .db-btn-primary { background: #3b82f6; color: #fff; border: none; padding: 7px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.15s, transform 0.15s; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
         .db-btn-primary:hover:not(:disabled) { background: #2563eb; transform: translateY(-1px); }
         .db-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-
-        /* ── TABLE ── */
         .db-table-wrap { overflow-x: auto; }
-
-        .db-table {
-          width: 100%;
-          border-collapse: collapse;
-          font-size: 0.875rem;
-        }
-
+        .db-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
         .db-table thead { background: #f8fafc; }
-
-        .db-table th {
-          padding: 10px 16px;
-          text-align: left;
-          font-size: 0.7rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.6px;
-          color: #64748b;
-          border-bottom: 1px solid #e2e8f0;
-        }
-
-        .db-table td {
-          padding: 13px 16px;
-          border-bottom: 1px solid #f1f5f9;
-          color: #1e293b;
-          vertical-align: middle;
-        }
-
+        .db-table th { padding: 10px 16px; text-align: left; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #64748b; border-bottom: 1px solid #e2e8f0; }
+        .db-table td { padding: 13px 16px; border-bottom: 1px solid #f1f5f9; color: #1e293b; vertical-align: middle; }
         .db-table tbody tr:last-child td { border-bottom: none; }
         .db-table tbody tr:hover td { background: #f8fafc; }
-
         .db-device-name { font-weight: 600; color: #1e293b; }
-
-        .db-device-id {
-          font-family: 'DM Mono', monospace;
-          font-size: 0.75rem;
-          color: #94a3b8;
-          background: #f1f5f9;
-          padding: 2px 6px;
-          border-radius: 4px;
-          display: inline-block;
-        }
-
-        .db-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 5px;
-          padding: 3px 10px;
-          border-radius: 20px;
-          font-size: 0.72rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.4px;
-        }
-
-        .db-badge::before {
-          content: '';
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-        }
-
+        .db-device-id { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: #94a3b8; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; display: inline-block; }
+        .db-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+        .db-badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
         .db-badge-active { background: #dcfce7; color: #166534; }
         .db-badge-active::before { background: #22c55e; }
         .db-badge-inactive { background: #fee2e2; color: #991b1b; }
         .db-badge-inactive::before { background: #ef4444; }
         .db-badge-maintenance { background: #fef9c3; color: #854d0e; }
         .db-badge-maintenance::before { background: #eab308; }
-
-        .db-loc-tag {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          font-size: 0.8rem;
-          color: #475569;
-        }
-
+        .db-loc-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 0.8rem; color: #475569; }
         .db-action-btns { display: flex; gap: 6px; }
-
-        .db-btn-edit {
-          background: #eff6ff;
-          color: #1d4ed8;
-          border: none;
-          padding: 5px 10px;
-          border-radius: 6px;
-          font-size: 0.78rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.15s;
-          font-family: 'DM Sans', sans-serif;
-        }
-
+        .db-btn-edit { background: #eff6ff; color: #1d4ed8; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: background 0.15s; font-family: 'DM Sans', sans-serif; }
         .db-btn-edit:hover { background: #dbeafe; }
-
-        .db-btn-del {
-          background: #fff1f2;
-          color: #be123c;
-          border: none;
-          padding: 5px 10px;
-          border-radius: 6px;
-          font-size: 0.78rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.15s;
-          font-family: 'DM Sans', sans-serif;
-        }
-
+        .db-btn-del { background: #fff1f2; color: #be123c; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: background 0.15s; font-family: 'DM Sans', sans-serif; }
         .db-btn-del:hover { background: #ffe4e6; }
-
-        /* ── STATES ── */
-        .db-empty {
-          text-align: center;
-          padding: 3rem 2rem;
-          color: #94a3b8;
-        }
-
+        .db-empty { text-align: center; padding: 3rem 2rem; color: #94a3b8; }
         .db-empty-icon { font-size: 2.5rem; margin-bottom: 10px; opacity: 0.5; }
         .db-empty-title { font-weight: 700; color: #475569; margin-bottom: 4px; font-size: 0.95rem; }
-
-        .db-error {
-          background: #fff1f2;
-          border: 1px solid #fecdd3;
-          color: #be123c;
-          padding: 12px 16px;
-          border-radius: 8px;
-          margin: 1rem 1.5rem;
-          font-size: 0.875rem;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
+        .db-error { background: #fff1f2; border: 1px solid #fecdd3; color: #be123c; padding: 12px 16px; border-radius: 8px; margin: 1rem 1.5rem; font-size: 0.875rem; display: flex; align-items: center; gap: 8px; }
         .db-spinner-wrap { text-align: center; padding: 3rem; color: #94a3b8; font-size: 0.875rem; }
-
-        .db-spinner {
-          width: 36px;
-          height: 36px;
-          border: 3px solid #e2e8f0;
-          border-top-color: #3b82f6;
-          border-radius: 50%;
-          animation: spin 0.7s linear infinite;
-          margin: 0 auto 12px;
-        }
-
+        .db-spinner { width: 36px; height: 36px; border: 3px solid #e2e8f0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 12px; }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ── FOOTER ── */
-        .db-footer {
-          background: #0f172a;
-          border-top: 1px solid rgba(255,255,255,0.06);
-          padding: 1.25rem 2rem;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-
-        .db-footer-brand {
-          font-family: 'Fraunces', serif;
-          font-size: 0.875rem;
-          font-weight: 700;
-          color: #e2e8f0;
-        }
-
-        .db-footer-text {
-          font-size: 0.75rem;
-          color: #475569;
-        }
-
-        .db-footer-links {
-          display: flex;
-          gap: 16px;
-        }
-
-        .db-footer-link {
-          font-size: 0.75rem;
-          color: #475569;
-          cursor: pointer;
-          text-decoration: none;
-          transition: color 0.15s;
-          background: none;
-          border: none;
-          font-family: 'DM Sans', sans-serif;
-        }
-
+        .db-footer { background: #0f172a; border-top: 1px solid rgba(255,255,255,0.06); padding: 1.25rem 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+        .db-footer-brand { font-family: 'Fraunces', serif; font-size: 0.875rem; font-weight: 700; color: #e2e8f0; }
+        .db-footer-text { font-size: 0.75rem; color: #475569; }
+        .db-footer-links { display: flex; gap: 16px; }
+        .db-footer-link { font-size: 0.75rem; color: #475569; cursor: pointer; text-decoration: none; transition: color 0.15s; background: none; border: none; font-family: 'DM Sans', sans-serif; }
         .db-footer-link:hover { color: #94a3b8; }
-
-        /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
           .db-nav-links { display: none; }
           .db-main { padding: 1.25rem 1rem 2rem; }
@@ -695,79 +445,36 @@ function Dashboard() {
         }
       `}</style>
 
-      {/* ── NAVBAR ── */}
+      {/* NAVBAR */}
       <nav className="db-nav">
         <div className="db-nav-brand">
           <img className="db-nav-brand-icon" src={logoHSF} alt="Hospital San Rafael" />
           <span className="db-nav-brand-text">Hospital San Rafael</span>
         </div>
-
         <ul className="db-nav-links">
-          <li>
-            <button className="db-nav-link active" onClick={() => navigate("/dashboard")}>
-              Dashboard
-            </button>
-          </li>
-          <li>
-            <button className="db-nav-link" onClick={() => navigate("/devices")}>
-              Dispositivos
-            </button>
-          </li>
-          {permissions.canViewAll && (
-            <li>
-              <button className="db-nav-link" onClick={() => navigate("/locations")}>
-                Ubicaciones
-              </button>
-            </li>
-          )}
-          {permissions.canViewAll && (
-            <li>
-              <button className="db-nav-link" onClick={() => navigate("/metrics")}>
-                Métricas
-              </button>
-            </li>
-          )}
-          {permissions.canViewAlerts && (
-            <li>
-              <button className="db-nav-link" onClick={() => navigate("/alerts")}>
-                Alertas
-              </button>
-            </li>
-          )}
-          {permissions.canViewReports && (
-            <li>
-              <button className="db-nav-link" onClick={() => navigate("/reports")}>
-                Reportes
-              </button>
-            </li>
-          )}
-          {permissions.canManageUsers && (
-            <li>
-              <button className="db-nav-link" onClick={() => navigate("/users")}>
-                Usuarios
-              </button>
-            </li>
-          )}
+          <li><button className="db-nav-link active" onClick={() => navigate("/dashboard")}>Dashboard</button></li>
+          <li><button className="db-nav-link" onClick={() => navigate("/devices")}>Dispositivos</button></li>
+          {permissions.canViewAll && <li><button className="db-nav-link" onClick={() => navigate("/locations")}>Ubicaciones</button></li>}
+          {permissions.canViewAll && <li><button className="db-nav-link" onClick={() => navigate("/metrics")}>Métricas</button></li>}
+          {permissions.canViewAlerts && <li><button className="db-nav-link" onClick={() => navigate("/alerts")}>Alertas</button></li>}
+          {permissions.canViewReports && <li><button className="db-nav-link" onClick={() => navigate("/reports")}>Reportes</button></li>}
+          {permissions.canManageUsers && <li><button className="db-nav-link" onClick={() => navigate("/users")}>Usuarios</button></li>}
         </ul>
-
         <div className="db-nav-right">
           <div className="db-nav-user">
             <div className="db-nav-avatar">{roleInfo[user.role].icon}</div>
             <div>
               <div className="db-nav-username">{user.username}</div>
-              <span className="db-role-pill" style={{ backgroundColor: roleInfo[user.role].color }}>
-                {roleInfo[user.role].label}
-              </span>
+              <span className="db-role-pill" style={{ backgroundColor: roleInfo[user.role].color }}>{roleInfo[user.role].label}</span>
             </div>
           </div>
-
           <button className="db-btn-ghost" onClick={() => navigate("/profile")}>Perfil</button>
           <button className="db-btn-ghost" onClick={() => navigate("/")}>Home</button>
           <button className="db-btn-ghost" onClick={handleLogout}>Cerrar sesión</button>
         </div>
       </nav>
 
-      {/* ── MAIN ── */}
+      {/* MAIN */}
       <main className="db-main">
         <div className="db-page-header">
           <h1 className="db-page-title">Dashboard</h1>
@@ -781,9 +488,7 @@ function Dashboard() {
         <div className="db-stats">
           {stats.map((s) => (
             <div className="db-stat" key={s.label}>
-              <div className="db-stat-icon" style={{ background: s.bg }}>
-                {s.icon}
-              </div>
+              <div className="db-stat-icon" style={{ background: s.bg }}>{s.icon}</div>
               <div>
                 <div className="db-stat-label">{s.label}</div>
                 <div className="db-stat-value" style={{ color: s.color }}>{s.value}</div>
@@ -801,17 +506,10 @@ function Dashboard() {
                 {user.role === "technician" ? "Dispositivos asignados a tu usuario" : "Listado de dispositivos del sistema"}
               </div>
             </div>
-
             <div className="db-card-actions">
               {permissions.canViewAll && (
                 <>
-                  <input
-                    type="text"
-                    className="db-input"
-                    placeholder="Buscar dispositivo..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+                  <input type="text" className="db-input" placeholder="Buscar dispositivo..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                   <select className="db-select" value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}>
                     <option value="all">Todos los estados</option>
                     <option value="activo">Activo</option>
@@ -821,9 +519,7 @@ function Dashboard() {
                   {locations.length > 0 && (
                     <select className="db-select" value={selectedLocation} onChange={(e) => setSelectedLocation(e.target.value)}>
                       <option value="all">Todas las ubicaciones</option>
-                      {locations.map((l) => (
-                        <option key={l.id} value={l.id}>{l.name}</option>
-                      ))}
+                      {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
                     </select>
                   )}
                 </>
@@ -834,13 +530,7 @@ function Dashboard() {
             </div>
           </div>
 
-          {loading && (
-            <div className="db-spinner-wrap">
-              <div className="db-spinner" />
-              <p>Cargando dispositivos...</p>
-            </div>
-          )}
-
+          {loading && <div className="db-spinner-wrap"><div className="db-spinner" /><p>Cargando dispositivos...</p></div>}
           {error && <div className="db-error">✕ {error}</div>}
 
           {!loading && !error && filteredDevices.length === 0 && devices.length === 0 && (
@@ -880,26 +570,14 @@ function Dashboard() {
                       <tr key={device.id}>
                         <td><span className="db-device-id">{device.id}</span></td>
                         <td><span className="db-device-name">{device.name || device.nombre || "Sin nombre"}</span></td>
-                        <td>
-                          <span className={`db-badge db-badge-${statusClass}`}>
-                            {status || "Sin estado"}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="db-loc-tag">
-                            📍 {getLocationName(device.location_id)}
-                          </span>
-                        </td>
+                        <td><span className={`db-badge db-badge-${statusClass}`}>{status || "Sin estado"}</span></td>
+                        <td><span className="db-loc-tag">📍 {getLocationName(device.location_id)}</span></td>
                         <td>{getTypeName(device.device_type_id)}</td>
                         <td>
                           <div className="db-action-btns">
-                            <button className="db-btn-edit" onClick={() => setDetailDevice(device)}>
-                              Ver más
-                            </button>
+                            <button className="db-btn-edit" onClick={() => setDetailDevice(device)}>Ver más</button>
                             {permissions.canDelete && (
-                              <button className="db-btn-del" onClick={() => handleDeleteDevice(device.id)}>
-                                Eliminar
-                              </button>
+                              <button className="db-btn-del" onClick={() => handleDeleteDevice(device.id)}>Eliminar</button>
                             )}
                           </div>
                         </td>
@@ -911,26 +589,70 @@ function Dashboard() {
             </div>
           )}
         </div>
+
+        {/* Métricas charts */}
+        {metrics.length > 0 && (
+          <MetricsCharts metrics={metrics} metricTypes={metricTypes} />
+        )}
       </main>
 
-      {/* ── FOOTER ── */}
+      {/* FOOTER */}
       <footer className="db-footer">
         <div>
           <div className="db-footer-brand">Hospital San Rafael</div>
           <div className="db-footer-text">Plataforma de microservicios · Sistema de monitoreo hospitalario</div>
         </div>
-
         <div className="db-footer-links">
           <button className="db-footer-link" onClick={() => navigate("/dashboard")}>Dashboard</button>
-          {permissions.canViewAll && (
-            <button className="db-footer-link" onClick={() => navigate("/locations")}>Ubicaciones</button>
-          )}
-          {permissions.canViewAll && (
-            <button className="db-footer-link" onClick={() => navigate("/metrics")}>Métricas</button>
-          )}
+          {permissions.canViewAll && <button className="db-footer-link" onClick={() => navigate("/locations")}>Ubicaciones</button>}
+          {permissions.canViewAll && <button className="db-footer-link" onClick={() => navigate("/metrics")}>Métricas</button>}
           <button className="db-footer-link" onClick={handleLogout}>Cerrar sesión</button>
         </div>
       </footer>
+
+      {showLogoutModal && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 1000,
+        }}>
+          <div style={{
+            background: "#fff", borderRadius: 16, padding: "2rem",
+            width: "100%", maxWidth: 400, boxShadow: "0 24px 60px rgba(0,0,0,0.2)",
+            fontFamily: "'DM Sans', sans-serif", margin: "0 1rem",
+          }}>
+            <div style={{ fontSize: "2rem", textAlign: "center", marginBottom: "1rem" }}>👋</div>
+            <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: "1.2rem", fontWeight: 800, color: "#0f172a", textAlign: "center", marginBottom: 8 }}>
+              ¿Cerrar sesión?
+            </h3>
+            <p style={{ color: "#64748b", fontSize: "0.875rem", textAlign: "center", marginBottom: "1.5rem", lineHeight: 1.6 }}>
+              Tu sesión actual se cerrará. Tendrás que iniciar sesión de nuevo para acceder al sistema.
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                style={{
+                  flex: 1, padding: "0.7rem", borderRadius: 8, border: "1.5px solid #e2e8f0",
+                  background: "#f8fafc", color: "#475569", fontWeight: 600,
+                  cursor: "pointer", fontSize: "0.875rem", fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmLogout}
+                style={{
+                  flex: 1, padding: "0.7rem", borderRadius: 8, border: "none",
+                  background: "#ef4444", color: "#fff", fontWeight: 700,
+                  cursor: "pointer", fontSize: "0.875rem", fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Sí, cerrar sesión
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <DeviceDetailsModal
         device={detailDevice}

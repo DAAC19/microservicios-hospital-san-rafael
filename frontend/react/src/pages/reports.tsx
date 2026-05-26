@@ -4,6 +4,7 @@ import { getReports } from "../services/reportsService";
 import { logout, getUserProfile } from "../services/authService";
 import { roleInfo, rolePermissionsMap } from "../utils/permissions";
 import type { User, RolePermissions } from "../types/auth";
+import LogoutModal from "../components/LogoutModal";
 
 
 const REPORT_TYPES = [
@@ -393,8 +394,8 @@ function Reports() {
     }
   };
 
-  const handleLogout = () => { logout(); navigate("/login"); };
-
+ const [showLogoutModal, setShowLogoutModal] = useState(false);
+const handleLogout = () => { setShowLogoutModal(true); };
   // ── Vista previa de datos ─────────────────────────────────────────────────
   const renderPreview = (data: Record<string, unknown>) => {
     const entries = Object.entries(data).filter(
@@ -757,6 +758,7 @@ function Reports() {
           <button className="db-footer-link" onClick={handleLogout}>Cerrar sesión</button>
         </div>
       </footer>
+      {showLogoutModal && <LogoutModal onCancel={() => setShowLogoutModal(false)} />}
     </div>
   );
 }

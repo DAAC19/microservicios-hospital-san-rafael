@@ -7,6 +7,7 @@ import api from "../api/api";
 import type { Alert } from "../types/alert";
 import type { User, RolePermissions } from "../types/auth";
 import logoHSF from "../assets/logoHSF.jpg";
+import LogoutModal from "../components/LogoutModal";
 
 function Alerts() {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ function Alerts() {
 
   const [confirmDelete, setConfirmDelete] = useState<Alert | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -158,10 +160,7 @@ function Alerts() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
+ const handleLogout = () => { setShowLogoutModal(true); };
 
   const isResolved = (a: Alert) =>
     String(a.status).toLowerCase() === "resolved" ||
@@ -1404,6 +1403,7 @@ function Alerts() {
           <button className="db-footer-link" onClick={handleLogout}>
             Cerrar sesión
           </button>
+          {showLogoutModal && <LogoutModal onCancel={() => setShowLogoutModal(false)} />}
         </div>
       </footer>
     </div>

@@ -726,26 +726,7 @@ export default function Locations() {
       `}</style>
 
       {/* ── NAVBAR ── */}
-      <nav className="lc-nav">
-        <div className="lc-nav-brand" onClick={() => navigate("/dashboard")}>
-          <div className="lc-nav-brand-icon">🏥</div>
-          <span className="lc-nav-brand-text">Hospital San Rafael</span>
-        </div>
-
-        <ul className="lc-nav-links">
-          <li>
-            <button className="lc-nav-link" onClick={() => navigate("/dashboard")}>Dashboard</button>
-          </li>
-          <li>
-            <button className="lc-nav-link active" onClick={() => navigate("/locations")}>Ubicaciones</button>
-          </li>
-          <li>
-            <button className="lc-nav-link active" onClick={() => navigate("/metrics")}>Métricas</button>
-          </li>
-        </ul>
-
-
-      </nav>
+      
 
       {/* ── MAIN ── */}
       <main className="lc-main">

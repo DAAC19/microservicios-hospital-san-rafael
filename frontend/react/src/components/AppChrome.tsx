@@ -5,6 +5,8 @@ import type { User } from "../types/auth";
 import { roleInfo, rolePermissionsMap } from "../utils/permissions";
 import logoHSF from "../assets/logoHSF.jpg";
 import "./appChrome.css";
+import { useState } from "react";
+import LogoutModal from "./LogoutModal";
 
 interface AppChromeProps {
   user: User;
@@ -16,10 +18,9 @@ export default function AppChrome({ user, active, children }: AppChromeProps) {
   const navigate = useNavigate();
   const permissions = rolePermissionsMap[user.role];
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+const handleLogout = () => { setShowLogoutModal(true); };
 
   const links = [
     { key: "dashboard", label: "Dashboard", path: "/dashboard", visible: true },
@@ -84,7 +85,9 @@ export default function AppChrome({ user, active, children }: AppChromeProps) {
               {link.label}
             </button>
           ))}
+         
         </div>
+         {showLogoutModal && <LogoutModal onCancel={() => setShowLogoutModal(false)} />}
       </footer>
     </div>
   );
