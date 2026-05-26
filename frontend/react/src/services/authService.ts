@@ -4,6 +4,7 @@ import { normalizeRole } from "../utils/permissions";
 
 interface TokenPayload {
   credential_id?: number | string;
+  user_id?: number | string;
   username?: string;
   role_id?: number | string;
   role?: string;
@@ -82,7 +83,8 @@ export const getUserProfile = async (): Promise<User> => {
   const decoded = decodeToken(token);
 
   return {
-    id: decoded.credential_id || "",
+    id: decoded.user_id || decoded.credential_id || "",
+    credential_id: decoded.credential_id || "",
     username: decoded.username || "Usuario",
     role: normalizeRole(decoded.role || "USER"),
     role_name: decoded.role as User["role_name"],

@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../services/authService";
+import logoHSF from "../assets/logoHSF.jpg";
 
 function Login() {
   const navigate = useNavigate();
@@ -166,13 +167,13 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         .login-icon {
           width: 80px;
           height: 80px;
-          background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+          background: #fff;
           border-radius: 16px;
           display: flex;
           align-items: center;
           justify-content: center;
           margin: 0 auto 1.5rem;
-          font-size: 2.5rem;
+          object-fit: contain;
           box-shadow: 0 10px 30px rgba(13, 110, 253, 0.2);
           animation: none;
         }
@@ -356,7 +357,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
             <div className="login-card-body">
               {/* Header */}
               <div className="login-header">
-                <div className="login-icon">🏥</div>
+                <img className="login-icon" src={logoHSF} alt="Hospital San Rafael" />
                 <h1 className="login-title">Bienvenido</h1>
                 <p className="login-subtitle">
                   Inicia sesión para acceder al sistema de monitoreo hospitalario

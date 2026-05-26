@@ -25,7 +25,7 @@ export const rolePermissionsMap: Record<UserRole, RolePermissions> = {
 
   supervisor: {
     canViewAll: true,
-    canEdit: true,
+    canEdit: false,
     canDelete: false,
     canViewAlerts: true,
     canViewReports: true,

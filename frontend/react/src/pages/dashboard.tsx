@@ -1,19 +1,23 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getDevices, deleteDevice } from "../services/deviceService";
+import { getDevices, deleteDevice, getDeviceTypes } from "../services/deviceService";
 import { logout, getUserProfile } from "../services/authService";
 import { getLocations } from "../services/locationService";
 import { getAlerts } from "../services/alertService";
-import type { Device } from "../types/device";
+import DeviceDetailsModal from "../components/DeviceDetailsModal";
+import type { Device, DeviceType } from "../types/device";
 import type { User, RolePermissions } from "../types/auth";
 import type { HospitalLocation } from "../types/location";
 import type { Alert } from "../types/alert";
 import { roleInfo, rolePermissionsMap } from "../utils/permissions";
+import logoHSF from "../assets/logoHSF.jpg";
+import "./management.css";
 
 function Dashboard() {
   const navigate = useNavigate();
 
   const [devices, setDevices] = useState<Device[]>([]);
+  const [deviceTypes, setDeviceTypes] = useState<DeviceType[]>([]);
   const [locations, setLocations] = useState<HospitalLocation[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [error, setError] = useState("");
@@ -25,6 +29,7 @@ function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("all");
+  const [detailDevice, setDetailDevice] = useState<Device | null>(null);
 
 
   useEffect(() => {
@@ -41,33 +46,56 @@ function Dashboard() {
     loadUserProfile();
   }, [navigate]);
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetchAllData = async () => {
+  const fetchAllData = useCallback(
+    async (isMounted: { current: boolean }) => {
       try {
         setLoading(true);
         setError("");
         const devicesData = await getDevices();
-        if (isMounted) setDevices(devicesData);
+        if (isMounted.current) setDevices(devicesData);
+        try {
+          const typesData = await getDeviceTypes();
+          if (isMounted.current) setDeviceTypes(typesData);
+        } catch (error) {
+          console.warn("No se pudieron cargar los tipos de dispositivos", error);
+        }
         try {
           const locationsData = await getLocations();
-          if (isMounted) setLocations(locationsData);
-        } catch { }
+          if (isMounted.current) setLocations(locationsData);
+        } catch (error) {
+          console.warn("No se pudieron cargar las ubicaciones", error);
+        }
         if (permissions?.canViewAlerts) {
           try {
             const alertsData = await getAlerts();
-            if (isMounted) setAlerts(alertsData);
-          } catch { }
+            if (isMounted.current) setAlerts(alertsData);
+          } catch (error) {
+            console.warn("No se pudieron cargar las alertas", error);
+          }
         }
-      } catch {
-        if (isMounted) setError("Error al cargar los datos. Por favor, intenta de nuevo.");
+      } catch (error) {
+        if (isMounted.current) setError("Error al cargar los datos. Por favor, intenta de nuevo.");
+        console.warn("Error general al cargar datos del dashboard", error);
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted.current) setLoading(false);
       }
+    },
+    [permissions]
+  );
+
+  useEffect(() => {
+    const isMounted = { current: true };
+    if (user && permissions) {
+      Promise.resolve().then(() => {
+        if (isMounted.current) {
+          void fetchAllData(isMounted);
+        }
+      });
+    }
+    return () => {
+      isMounted.current = false;
     };
-    if (user && permissions) fetchAllData();
-    return () => { isMounted = false; };
-  }, [user, permissions]);
+  }, [user, permissions, fetchAllData]);
 
   let filteredDevices = [...devices];
   if (user?.role === "technician") {
@@ -100,9 +128,15 @@ function Dashboard() {
       const data = await getDevices();
       setDevices(data);
       if (permissions?.canViewAlerts) {
-        try { setAlerts(await getAlerts()); } catch { }
+        try {
+          const alertsData = await getAlerts();
+          setAlerts(alertsData);
+        } catch (error) {
+          console.warn("No se pudieron actualizar las alertas", error);
+        }
       }
-    } catch {
+    } catch (error) {
+      console.warn("No se pudieron actualizar los dispositivos", error);
       setError("No se pudieron actualizar los dispositivos.");
     } finally {
       setLoading(false);
@@ -134,6 +168,12 @@ function Dashboard() {
     if (!locationId) return "Sin ubicación";
     const loc = locations.find((l) => String(l.id) === String(locationId));
     return loc?.name || `Ubicación ${locationId}`;
+  };
+
+  const getTypeName = (typeId?: string | number) => {
+    if (!typeId) return "Sin tipo";
+    const type = deviceTypes.find((item) => String(item.id) === String(typeId));
+    return type?.name || `Tipo ${typeId}`;
   };
 
   const stats = [
@@ -191,14 +231,12 @@ function Dashboard() {
         }
 
         .db-nav-brand-icon {
-          width: 34px;
-          height: 34px;
-          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 16px;
+          width: 40px;
+          height: 40px;
+          border-radius: 4px;
+          display: block;
+          object-fit: contain;
+          background: #fff;
           flex-shrink: 0;
         }
 
@@ -660,7 +698,7 @@ function Dashboard() {
       {/* ── NAVBAR ── */}
       <nav className="db-nav">
         <div className="db-nav-brand">
-          <div className="db-nav-brand-icon">🏥</div>
+          <img className="db-nav-brand-icon" src={logoHSF} alt="Hospital San Rafael" />
           <span className="db-nav-brand-text">Hospital San Rafael</span>
         </div>
 
@@ -668,6 +706,11 @@ function Dashboard() {
           <li>
             <button className="db-nav-link active" onClick={() => navigate("/dashboard")}>
               Dashboard
+            </button>
+          </li>
+          <li>
+            <button className="db-nav-link" onClick={() => navigate("/devices")}>
+              Dispositivos
             </button>
           </li>
           {permissions.canViewAll && (
@@ -698,6 +741,13 @@ function Dashboard() {
               </button>
             </li>
           )}
+          {permissions.canManageUsers && (
+            <li>
+              <button className="db-nav-link" onClick={() => navigate("/users")}>
+                Usuarios
+              </button>
+            </li>
+          )}
         </ul>
 
         <div className="db-nav-right">
@@ -711,7 +761,8 @@ function Dashboard() {
             </div>
           </div>
 
-          <button className="db-btn-ghost" onClick={() => navigate("/")}>← Home</button>
+          <button className="db-btn-ghost" onClick={() => navigate("/profile")}>Perfil</button>
+          <button className="db-btn-ghost" onClick={() => navigate("/")}>Home</button>
           <button className="db-btn-ghost" onClick={handleLogout}>Cerrar sesión</button>
         </div>
       </nav>
@@ -817,7 +868,8 @@ function Dashboard() {
                     <th>Nombre</th>
                     <th>Estado</th>
                     <th>Ubicación</th>
-                    {permissions.canEdit && <th>Acciones</th>}
+                    <th>Tipo</th>
+                    <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -838,20 +890,19 @@ function Dashboard() {
                             📍 {getLocationName(device.location_id)}
                           </span>
                         </td>
-                        {permissions.canEdit && (
-                          <td>
-                            <div className="db-action-btns">
-                              <button className="db-btn-edit" onClick={() => alert(`Editar dispositivo ${device.id}`)}>
-                                ✏️ Editar
+                        <td>{getTypeName(device.device_type_id)}</td>
+                        <td>
+                          <div className="db-action-btns">
+                            <button className="db-btn-edit" onClick={() => setDetailDevice(device)}>
+                              Ver más
+                            </button>
+                            {permissions.canDelete && (
+                              <button className="db-btn-del" onClick={() => handleDeleteDevice(device.id)}>
+                                Eliminar
                               </button>
-                              {permissions.canDelete && (
-                                <button className="db-btn-del" onClick={() => handleDeleteDevice(device.id)}>
-                                  🗑️ Eliminar
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        )}
+                            )}
+                          </div>
+                        </td>
                       </tr>
                     );
                   })}
@@ -865,7 +916,7 @@ function Dashboard() {
       {/* ── FOOTER ── */}
       <footer className="db-footer">
         <div>
-          <div className="db-footer-brand">🏥 Hospital San Rafael</div>
+          <div className="db-footer-brand">Hospital San Rafael</div>
           <div className="db-footer-text">Plataforma de microservicios · Sistema de monitoreo hospitalario</div>
         </div>
 
@@ -880,6 +931,13 @@ function Dashboard() {
           <button className="db-footer-link" onClick={handleLogout}>Cerrar sesión</button>
         </div>
       </footer>
+
+      <DeviceDetailsModal
+        device={detailDevice}
+        deviceTypes={deviceTypes}
+        locations={locations}
+        onClose={() => setDetailDevice(null)}
+      />
     </div>
   );
 }

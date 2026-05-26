@@ -9,6 +9,7 @@ export interface LoginData {
 
 export interface User {
   id: string | number;
+  credential_id?: string | number;
   username: string;
   email?: string;
   role: UserRole;

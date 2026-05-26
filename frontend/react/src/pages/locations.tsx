@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { HospitalLocation } from "../types/location";
+import AppChrome from "../components/AppChrome";
 import {
   getLocations,
   createLocation,
@@ -8,7 +9,7 @@ import {
   deleteLocation,
 } from "../services/locationService";
 import { logout, getUserProfile } from "../services/authService";
-import { roleInfo, rolePermissionsMap } from "../utils/permissions";
+import { rolePermissionsMap } from "../utils/permissions";
 import type { User } from "../types/auth";
 
 type ModalMode = "create" | "edit" | null;
@@ -56,19 +57,24 @@ export default function Locations() {
     getUserProfile().then(setUser).catch(() => { logout(); navigate("/login"); });
   }, [navigate]);
 
-  const fetchLocations = async () => {
+  const fetchLocations = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       setLocations(await getLocations());
     } catch (e: unknown) {
+      console.warn("No se pudieron cargar las ubicaciones", e);
       setError((e as Error).message);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { fetchLocations(); }, []);
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      void fetchLocations();
+    });
+  }, [fetchLocations]);
 
   const openCreate = () => { setSelected(null); setForm(EMPTY_FORM); setFormError(null); setModalMode("create"); };
   const openEdit = (loc: HospitalLocation) => { setSelected(loc); setForm(locationToForm(loc)); setFormError(null); setModalMode("edit"); };
@@ -114,8 +120,6 @@ export default function Locations() {
     }
   };
 
-  const handleLogout = () => { logout(); navigate("/login"); };
-
   const filtered = locations.filter((l) => {
     const q = search.toLowerCase();
     return (
@@ -132,11 +136,12 @@ export default function Locations() {
     return new Date(val).toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" });
   };
 
-  const dash = (val?: string) => val || "—";
-
   const permissions = user ? rolePermissionsMap[user.role] : null;
 
+  if (!user) return <div className="mg-loading">Cargando...</div>;
+
   return (
+    <AppChrome user={user} active="locations">
     <div className="lc-root">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,700;0,800;1,700&display=swap');
@@ -144,8 +149,8 @@ export default function Locations() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         .lc-root {
-          min-height: 100vh;
-          background: #f1f5f9;
+          min-height: auto;
+          background: transparent;
           font-family: 'DM Sans', sans-serif;
           display: flex;
           flex-direction: column;
@@ -737,29 +742,9 @@ export default function Locations() {
           <li>
             <button className="lc-nav-link active" onClick={() => navigate("/metrics")}>Métricas</button>
           </li>
-          <li>
-            <button className="lc-nav-link active" onClick={() => navigate("/alerts")}>Alertas</button>
-          </li>
-          <li>
-            <button className="lc-nav-link active" onClick={() => navigate("/reports")}>Reportes</button>
-          </li>
         </ul>
 
-        <div className="lc-nav-right">
-          {user && (
-            <div className="lc-nav-user">
-              <div className="lc-nav-avatar">{roleInfo[user.role].icon}</div>
-              <div>
-                <div className="lc-nav-username">{user.username}</div>
-                <span className="lc-role-pill" style={{ backgroundColor: roleInfo[user.role].color }}>
-                  {roleInfo[user.role].label}
-                </span>
-              </div>
-            </div>
-          )}
-          <button className="lc-btn-ghost" onClick={() => navigate("/dashboard")}>← Dashboard</button>
-          <button className="lc-btn-ghost" onClick={handleLogout}>Cerrar sesión</button>
-        </div>
+
       </nav>
 
       {/* ── MAIN ── */}
@@ -773,7 +758,7 @@ export default function Locations() {
             </h1>
             <p className="lc-page-sub">Gestión de ubicaciones del hospital</p>
           </div>
-          {(permissions?.canEdit || permissions?.canViewAll) && (
+          {permissions?.canEdit && (
             <button className="lc-btn-primary" onClick={openCreate}>
               + Nueva ubicación
             </button>
@@ -844,8 +829,12 @@ export default function Locations() {
                       <td className="lc-td-date">{formatDate(loc.created_at)}</td>
                       <td className="lc-td-actions">
                         <div className="lc-action-btns">
-                          <button className="lc-btn-edit" onClick={() => openEdit(loc)} title="Editar">✏️</button>
-                          <button className="lc-btn-del" onClick={() => setDeleteTarget(loc)} title="Eliminar">🗑️</button>
+                          {permissions?.canEdit && (
+                            <button className="lc-btn-edit" onClick={() => openEdit(loc)} title="Editar">✏️</button>
+                          )}
+                          {permissions?.canDelete && (
+                            <button className="lc-btn-del" onClick={() => setDeleteTarget(loc)} title="Eliminar">🗑️</button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -856,19 +845,6 @@ export default function Locations() {
           )}
         </div>
       </main>
-
-      {/* ── FOOTER ── */}
-      <footer className="lc-footer">
-        <div>
-          <div className="lc-footer-brand">🏥 Hospital San Rafael</div>
-          <div className="lc-footer-text">Plataforma de microservicios · Sistema de monitoreo hospitalario</div>
-        </div>
-        <div className="lc-footer-links">
-          <button className="lc-footer-link" onClick={() => navigate("/dashboard")}>Dashboard</button>
-          <button className="lc-footer-link" onClick={() => navigate("/locations")}>Ubicaciones</button>
-          <button className="lc-footer-link" onClick={handleLogout}>Cerrar sesión</button>
-        </div>
-      </footer>
 
       {/* ── CREATE / EDIT MODAL ── */}
       {modalMode && (
@@ -971,5 +947,6 @@ export default function Locations() {
         </div>
       )}
     </div>
+    </AppChrome>
   );
 }

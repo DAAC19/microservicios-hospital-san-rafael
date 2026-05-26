@@ -1,6 +1,12 @@
 import api from "../api/api";
 import type { Alert } from "../types/alert";
 
+export type CreateAlertPayload = {
+  device_id: number;
+  severity_id: number;
+  message: string;
+};
+
 export const getAlerts = async (): Promise<Alert[]> => {
   const response = await api.get<Alert[]>("/alerts");
   return response.data;
@@ -14,7 +20,7 @@ export const getAlertsByDevice = async (
 };
 
 export const createAlert = async (
-  alert: Partial<Alert>
+  alert: CreateAlertPayload
 ): Promise<Alert> => {
   const response = await api.post<Alert>("/alerts", alert);
   return response.data;
