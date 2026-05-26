@@ -7,49 +7,55 @@ import type { User, RolePermissions } from "../types/auth";
 
 
 const REPORT_TYPES = [
-  { value: "general",  label: "General del sistema",    icon: "📊", color: "#5b21b6", bg: "#f5f3ff" },
-  { value: "alerts",   label: "Alertas",                icon: "🚨", color: "#991b1b", bg: "#fef2f2" },
-  { value: "metrics",  label: "Métricas por dispositivo", icon: "📈", color: "#1e40af", bg: "#eff6ff" },
-  { value: "devices",  label: "Dispositivos",           icon: "🖥️", color: "#166534", bg: "#f0fdf4" },
-  { value: "last_24h", label: "Últimas 24 horas",       icon: "⏱️", color: "#92400e", bg: "#fffbeb" },
+  { value: "general", label: "General del sistema", icon: "📊", color: "#5b21b6", bg: "#f5f3ff" },
+  { value: "alerts", label: "Alertas", icon: "🚨", color: "#991b1b", bg: "#fef2f2" },
+  { value: "metrics", label: "Métricas por dispositivo", icon: "📈", color: "#1e40af", bg: "#eff6ff" },
+  { value: "devices", label: "Dispositivos", icon: "🖥️", color: "#166534", bg: "#f0fdf4" },
+  { value: "last_24h", label: "Últimas 24 horas", icon: "⏱️", color: "#92400e", bg: "#fffbeb" },
 ];
 
 // Filtros que aparecen según el tipo seleccionado
 const FILTERS_BY_TYPE: Record<string, { key: string; label: string; type: "select" | "date" | "text"; options?: { value: string; label: string }[] }[]> = {
   general: [
     { key: "date_from", label: "Desde", type: "date" },
-    { key: "date_to",   label: "Hasta", type: "date" },
+    { key: "date_to", label: "Hasta", type: "date" },
   ],
   alerts: [
-    { key: "severity", label: "Severidad", type: "select", options: [
-      { value: "", label: "Todas" },
-      { value: "CRITICAL", label: "CRITICAL" },
-      { value: "WARNING",  label: "WARNING"  },
-      { value: "INFO",     label: "INFO"     },
-    ]},
-    { key: "status", label: "Estado", type: "select", options: [
-      { value: "",         label: "Todos" },
-      { value: "open",     label: "Abierta"  },
-      { value: "resolved", label: "Resuelta" },
-    ]},
+    {
+      key: "severity", label: "Severidad", type: "select", options: [
+        { value: "", label: "Todas" },
+        { value: "CRITICAL", label: "CRITICAL" },
+        { value: "WARNING", label: "WARNING" },
+        { value: "INFO", label: "INFO" },
+      ]
+    },
+    {
+      key: "status", label: "Estado", type: "select", options: [
+        { value: "", label: "Todos" },
+        { value: "open", label: "Abierta" },
+        { value: "resolved", label: "Resuelta" },
+      ]
+    },
     { key: "date_from", label: "Desde", type: "date" },
-    { key: "date_to",   label: "Hasta", type: "date" },
+    { key: "date_to", label: "Hasta", type: "date" },
   ],
   metrics: [
     { key: "device_id", label: "ID Dispositivo", type: "text" },
-    { key: "metric",    label: "Métrica",         type: "select", options: [
-      { value: "",            label: "Todas"        },
-      { value: "temperature", label: "Temperatura"  },
-      { value: "pressure",    label: "Presión"      },
-      { value: "humidity",    label: "Humedad"      },
-      { value: "heartrate",   label: "Ritmo cardíaco" },
-    ]},
+    {
+      key: "metric", label: "Métrica", type: "select", options: [
+        { value: "", label: "Todas" },
+        { value: "temperature", label: "Temperatura" },
+        { value: "pressure", label: "Presión" },
+        { value: "humidity", label: "Humedad" },
+        { value: "heartrate", label: "Ritmo cardíaco" },
+      ]
+    },
     { key: "date_from", label: "Desde", type: "date" },
-    { key: "date_to",   label: "Hasta", type: "date" },
+    { key: "date_to", label: "Hasta", type: "date" },
   ],
   devices: [
     { key: "date_from", label: "Desde", type: "date" },
-    { key: "date_to",   label: "Hasta", type: "date" },
+    { key: "date_to", label: "Hasta", type: "date" },
   ],
   last_24h: [],
 };
@@ -130,8 +136,8 @@ async function generatePDF(
   const now = new Date().toLocaleString("es-CO");
   const metaItems = [
     ["Generado", now],
-    ["Usuario",  username],
-    ["Tipo",     typeLabel],
+    ["Usuario", username],
+    ["Tipo", typeLabel],
     ...Object.entries(filters).filter(([, v]) => v).map(([k, v]) => [k, v]),
   ];
 
@@ -212,7 +218,13 @@ async function generatePDF(
   function addKeyValue(obj: Record<string, unknown>, depth = 0) {
     Object.entries(obj).forEach(([key, val]) => {
       if (y > 270) { doc.addPage(); y = 20; }
-      if (isArray(val) && val.length > 0 && isObject(val[0])) {
+      if (
+        isArray(val) &&
+        val.length > 0 &&
+        isObject(val[0]) &&
+        key !== "by_severity" &&
+        key !== "by_status"
+      ) {
         addSectionTitle(key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()));
         const { keys, rows } = flattenForTable(val);
         addTable(keys, rows);
@@ -301,15 +313,15 @@ async function generatePDF(
 function Reports() {
   const navigate = useNavigate();
 
-  const [user, setUser]             = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [permissions, setPermissions] = useState<RolePermissions | null>(null);
-  const [genType, setGenType]       = useState("general");
-  const [filters, setFilters]       = useState<Record<string, string>>({});
+  const [genType, setGenType] = useState("general");
+  const [filters, setFilters] = useState<Record<string, string>>({});
   const [reportData, setReportData] = useState<Record<string, unknown> | null>(null);
-  const [loading, setLoading]       = useState(false);
-  const [exporting, setExporting]   = useState(false);
-  const [error, setError]           = useState("");
-  const [success, setSuccess]       = useState("");
+  const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const currentType = REPORT_TYPES.find(t => t.value === genType)!;
   const currentFilters = FILTERS_BY_TYPE[genType] ?? [];
@@ -385,7 +397,9 @@ function Reports() {
 
   // ── Vista previa de datos ─────────────────────────────────────────────────
   const renderPreview = (data: Record<string, unknown>) => {
-    const entries = Object.entries(data);
+    const entries = Object.entries(data).filter(
+      ([key]) => key !== "alerts" && key !== "devices"
+    );
     return (
       <div style={{ padding: "1.25rem 1.5rem", display: "flex", flexDirection: "column", gap: 20 }}>
         {entries.map(([key, val]) => {
@@ -509,8 +523,8 @@ function Reports() {
     if (lk === "severity" || lk === "severidad") {
       const colors: Record<string, [string, string]> = {
         CRITICAL: ["#fef2f2", "#991b1b"],
-        WARNING:  ["#fffbeb", "#92400e"],
-        INFO:     ["#eff6ff", "#1e40af"],
+        WARNING: ["#fffbeb", "#92400e"],
+        INFO: ["#eff6ff", "#1e40af"],
       };
       const [bg, color] = colors[val?.toUpperCase()] ?? ["#f1f5f9", "#475569"];
       return <span style={{ background: bg, color, borderRadius: 20, padding: "2px 10px", fontSize: "0.7rem", fontWeight: 700 }}>{val}</span>;
@@ -694,7 +708,7 @@ function Reports() {
             </div>
           </div>
 
-          {error   && <div className="db-error">✕ {error}</div>}
+          {error && <div className="db-error">✕ {error}</div>}
           {success && <div className="db-success">✅ {success}</div>}
         </div>
 
