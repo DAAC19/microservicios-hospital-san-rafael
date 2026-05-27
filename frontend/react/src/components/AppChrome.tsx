@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
-import { logout } from "../services/authService";
 import type { User } from "../types/auth";
 import { roleInfo, rolePermissionsMap } from "../utils/permissions";
 import logoHSF from "../assets/logoHSF.jpg";

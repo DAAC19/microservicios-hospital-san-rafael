@@ -23,7 +23,7 @@ app.register_blueprint(locations_bp)
 app.register_blueprint(devices_bp)
 app.register_blueprint(metrics_bp)
 app.register_blueprint(alerts_bp)
-app.register_blueprint(reports_bp)
+app.register_blueprint(reports_bp, url_prefix="/api")
 
 
 @app.route("/", methods=["GET"])

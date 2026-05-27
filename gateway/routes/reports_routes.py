@@ -18,11 +18,10 @@ TYPE_MAP = {
 }
 
 
-@reports_bp.route("/reports", methods=["GET"])
+@reports_bp.route("/reports/<report_type>", methods=["GET"])
 @token_required
 @roles_required("ADMIN", "SUPERVISOR", "USER")
-def get_reports():
-    report_type = request.args.get("type", "general")
+def get_reports(report_type="general"):
     path = TYPE_MAP.get(report_type, "/general")
     response = requests.get(f"{REPORTS_URL}{path}")
     return response_json(response)

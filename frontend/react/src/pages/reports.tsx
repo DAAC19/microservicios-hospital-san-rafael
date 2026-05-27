@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import {  useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getReports } from "../services/reportsService";
 import { logout, getUserProfile } from "../services/authService";
@@ -6,6 +6,7 @@ import { rolePermissionsMap } from "../utils/permissions";
 import type { User, RolePermissions } from "../types/auth";
 import Navbar from "../components/Navbar";
 import LogoutModal from "../components/LogoutModal";
+
 
 // ── Tabler outline icons ──────────────────────────────────────────────────────
 const IconChartBar = () => (
@@ -58,6 +59,7 @@ const IconBuildingHospital = () => (
     <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 21l18 0"/><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16"/><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"/><path d="M10 9l4 0"/><path d="M12 7l0 4"/>
   </svg>
 );
+
 
 const REPORT_TYPES = [
   { value: "general",  label: "System Overview",       Icon: IconChartBar,      color: "#5b21b6", bg: "#f5f3ff" },
@@ -330,10 +332,18 @@ function Reports() {
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
-  const buildQuery = () => {
-    const params = new URLSearchParams({ type: genType });
-    Object.entries(filters).forEach(([k, v]) => { if (v) params.append(k, v); });
-    return params.toString();
+  const buildQuery = (): string => {
+    // El tipo de reporte debe ser currentType.value o genType
+    const reportType = genType; // ej: "last_24h"
+    
+    // Construir query string solo con filtros adicionales
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([k, v]) => {
+      if (v) params.append(k, v);
+    });
+
+    const queryString = params.toString();
+    return queryString ? `${reportType}?${queryString}` : reportType;
   };
 
   const handleGenerate = async () => {

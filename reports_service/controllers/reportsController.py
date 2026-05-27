@@ -203,6 +203,4 @@ def serialize_device(device):
         "id": device.id,
         "name": device.name,
         "status": device.status,
-        "created_at": device.created_at,
-        "updated_at": device.updated_at
     }
