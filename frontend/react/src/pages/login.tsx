@@ -372,7 +372,7 @@ function Login() {
                     type="text"
                     name="username"
                     className="form-input"
-                    placeholder="user@hospital.com"
+                    placeholder="Usuario"
                     value={form.username}
                     onChange={handleChange}
                     required
