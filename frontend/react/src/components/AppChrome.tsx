@@ -24,12 +24,12 @@ const handleLogout = () => { setShowLogoutModal(true); };
 
   const links = [
     { key: "dashboard", label: "Dashboard", path: "/dashboard", visible: true },
-    { key: "devices", label: "Dispositivos", path: "/devices", visible: true },
-    { key: "locations", label: "Ubicaciones", path: "/locations", visible: true },
-    { key: "metrics", label: "Métricas", path: "/metrics", visible: true },
-    { key: "alerts", label: "Alertas", path: "/alerts", visible: permissions.canViewAlerts },
-    { key: "reports", label: "Reportes", path: "/reports", visible: permissions.canViewReports },
-    { key: "users", label: "Usuarios", path: "/users", visible: permissions.canManageUsers },
+    { key: "devices", label: "Devices", path: "/devices", visible: true },
+    { key: "locations", label: "Locations", path: "/locations", visible: true },
+    { key: "metrics", label: "Metrics", path: "/metrics", visible: true },
+    { key: "alerts", label: "Alerts", path: "/alerts", visible: permissions.canViewAlerts },
+    { key: "reports", label: "Reports", path: "/reports", visible: permissions.canViewReports },
+    { key: "users", label: "Users", path: "/users", visible: permissions.canManageUsers },
   ];
 
   return (
@@ -65,7 +65,7 @@ const handleLogout = () => { setShowLogoutModal(true); };
             </span>
           </button>
           <button className="app-btn-ghost" onClick={() => navigate("/")} type="button">Home</button>
-          <button className="app-btn-ghost" onClick={handleLogout} type="button">Cerrar sesión</button>
+          <button className="app-btn-ghost" onClick={handleLogout} type="button">Sign out</button>
         </div>
       </nav>
 
@@ -77,7 +77,7 @@ const handleLogout = () => { setShowLogoutModal(true); };
             <img className="app-footer-logo" src={logoHSF} alt="" />
             Hospital San Rafael
           </div>
-          <div className="app-footer-text">Plataforma de microservicios - Sistema de monitoreo hospitalario</div>
+          <div className="app-footer-text">Platform of microservices - Hospital monitoring system</div>
         </div>
         <div className="app-footer-links">
           {links.filter((link) => link.visible).slice(0, 6).map((link) => (

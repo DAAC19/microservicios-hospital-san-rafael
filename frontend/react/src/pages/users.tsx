@@ -18,10 +18,10 @@ const emptyCredentialsForm = {
 };
 
 const roleOptions = [
-  { id: "1", label: "Administrador (ADMIN)" },
-  { id: "2", label: "Usuario (USER)" },
+  { id: "1", label: "Administrator (ADMIN)" },
+  { id: "2", label: "User (USER)" },
   { id: "3", label: "Supervisor (SUPERVISOR)" },
-  { id: "4", label: "Técnico (TECHNICIAN)" },
+  { id: "4", label: "Technician (TECHNICIAN)" },
 ] as const;
 
 const roleNameToIdMap: Record<string, string> = {
@@ -63,8 +63,8 @@ export default function Users() {
     try {
       setUsers(await getUsers());
     } catch (err) {
-      console.warn("No se pudieron cargar los usuarios", err);
-      setError((err as Error).message || "No se pudieron cargar los usuarios.");
+      console.warn("Could not load users", err);
+      setError((err as Error).message || "Could not load users.");
     } finally {
       setLoading(false);
     }
@@ -72,9 +72,7 @@ export default function Users() {
 
   useEffect(() => {
     if (authUser) {
-      Promise.resolve().then(() => {
-        void loadUsers();
-      });
+      Promise.resolve().then(() => { void loadUsers(); });
     }
   }, [authUser, loadUsers]);
 
@@ -101,7 +99,7 @@ export default function Users() {
 
   const save = async () => {
     if (!form.first_name?.trim() || !form.last_name?.trim() || !form.document?.trim() || !form.phone?.trim()) {
-      setFormError("Todos los campos son obligatorios.");
+      setFormError("All fields are required.");
       return;
     }
     try {
@@ -125,29 +123,26 @@ export default function Users() {
   };
 
   const remove = async (item: UserData) => {
-    if (!window.confirm(`¿Eliminar a ${item.first_name} ${item.last_name}?`)) return;
+    if (!window.confirm(`Delete ${item.first_name} ${item.last_name}?`)) return;
     await deleteUser(item.id);
     setUsers((prev) => prev.filter((user) => String(user.id) !== String(item.id)));
   };
 
   const registerCredentials = async () => {
     if (authUser?.role !== "admin") {
-      setCredentialsError("Solo los administradores pueden registrar credenciales.");
+      setCredentialsError("Only administrators can register credentials.");
       return;
     }
-
     if (!credentialsForm.user_id || !credentialsForm.username.trim() || !credentialsForm.password || !credentialsForm.confirmPassword) {
-      setCredentialsError("Todos los campos son obligatorios.");
+      setCredentialsError("All fields are required.");
       return;
     }
-
     if (credentialsForm.password.length < 6) {
-      setCredentialsError("La contraseña debe tener al menos 6 caracteres.");
+      setCredentialsError("Password must be at least 6 characters.");
       return;
     }
-
     if (credentialsForm.password !== credentialsForm.confirmPassword) {
-      setCredentialsError("La confirmación de contraseña no coincide.");
+      setCredentialsError("Passwords do not match.");
       return;
     }
 
@@ -162,45 +157,51 @@ export default function Users() {
         password: credentialsForm.password,
         role_id: Number(credentialsForm.role_id),
       });
-
-      setCredentialsSuccess("Credenciales registradas correctamente.");
-      setCredentialsForm((prev) => ({
-        ...prev,
-        username: "",
-        password: "",
-        confirmPassword: "",
-      }));
+      setCredentialsSuccess("Credentials registered successfully.");
+      setCredentialsForm((prev) => ({ ...prev, username: "", password: "", confirmPassword: "" }));
     } catch (err) {
-      setCredentialsError((err as Error).message || "No se pudieron registrar las credenciales.");
+      setCredentialsError((err as Error).message || "Could not register credentials.");
     } finally {
       setCredentialsSubmitting(false);
     }
   };
 
-  if (!authUser) return <div className="mg-loading">Cargando...</div>;
+  if (!authUser) return <div className="mg-loading">Loading...</div>;
 
   return (
     <AppChrome user={authUser} active="users">
       <div className="mg-page-header">
         <div>
-          <h1 className="mg-page-title">Usuarios</h1>
-          <p className="mg-page-sub">Administración de información básica. Las credenciales no exponen contraseñas ni hashes.</p>
+          <h1 className="mg-page-title">Users</h1>
+          <p className="mg-page-sub">Basic information management. Credentials do not expose passwords or hashes.</p>
         </div>
         <div className="mg-header-actions">
           {authUser.role === "admin" && (
             <button className="mg-btn-secondary" onClick={() => openCredentialsModal()}>
-              + Registrar credenciales
+              + Register credentials
             </button>
           )}
-          <button className="mg-btn-primary" onClick={() => openModal("create")}>+ Nuevo usuario</button>
+          <button className="mg-btn-primary" onClick={() => openModal("create")}>+ New user</button>
         </div>
       </div>
 
       <div className="mg-card">
-        {loading ? <div className="mg-state">Cargando usuarios...</div> : error ? <div className="mg-error">{error}</div> : (
+        {loading ? (
+          <div className="mg-state">Loading users...</div>
+        ) : error ? (
+          <div className="mg-error">{error}</div>
+        ) : (
           <div className="mg-table-wrap">
             <table className="mg-table">
-              <thead><tr><th>ID</th><th>Nombre</th><th>Documento</th><th>Teléfono</th><th>Acciones</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Document</th>
+                  <th>Phone</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
               <tbody>
                 {users.map((item) => (
                   <tr key={item.id}>
@@ -210,11 +211,11 @@ export default function Users() {
                     <td>{item.phone}</td>
                     <td className="mg-actions">
                       {authUser.role === "admin" && (
-                        <button className="mg-btn-secondary" onClick={() => openCredentialsModal(item)}>Credenciales</button>
+                        <button className="mg-btn-secondary" onClick={() => openCredentialsModal(item)}>Credentials</button>
                       )}
-                      <button className="mg-btn-secondary" onClick={() => openModal("details", item)}>Ver</button>
-                      <button className="mg-btn-edit" onClick={() => openModal("edit", item)}>Editar</button>
-                      <button className="mg-btn-danger" onClick={() => remove(item)}>Eliminar</button>
+                      <button className="mg-btn-secondary" onClick={() => openModal("details", item)}>View</button>
+                      <button className="mg-btn-edit" onClick={() => openModal("edit", item)}>Edit</button>
+                      <button className="mg-btn-danger" onClick={() => remove(item)}>Delete</button>
                     </td>
                   </tr>
                 ))}
@@ -226,48 +227,47 @@ export default function Users() {
 
       {modal && (
         <div className="dev-overlay" onClick={() => setModal(null)}>
-          <div className="dev-modal" onClick={(event) => event.stopPropagation()}>
+          <div className="dev-modal" onClick={(e) => e.stopPropagation()}>
             <div className="dev-modal-head">
               <h2 className="dev-modal-title">
                 {modal === "details"
-                  ? "Información del usuario"
+                  ? "User information"
                   : modal === "edit"
-                    ? "Editar usuario"
-                    : modal === "credentials"
-                      ? "Registrar credenciales"
-                      : "Nuevo usuario"}
+                  ? "Edit user"
+                  : modal === "credentials"
+                  ? "Register credentials"
+                  : "New user"}
               </h2>
-              <button className="dev-modal-close" onClick={() => setModal(null)}>x</button>
+              <button className="dev-modal-close" onClick={() => setModal(null)}>✕</button>
             </div>
+
             <div className="dev-modal-body">
               {modal === "credentials" ? (
                 <>
-                  {credentialsError && <p className="mg-error">{credentialsError}</p>}
+                  {credentialsError   && <p className="mg-error">{credentialsError}</p>}
                   {credentialsSuccess && <p className="mg-state">{credentialsSuccess}</p>}
                   <label>
-                    Usuario
+                    User
                     <select
                       value={credentialsForm.user_id}
                       onChange={(e) => setCredentialsForm({ ...credentialsForm, user_id: e.target.value })}
                     >
-                      <option value="">Selecciona un usuario</option>
+                      <option value="">Select a user</option>
                       {users.map((item) => (
                         <option key={item.id} value={String(item.id)}>
-                          {item.first_name} {item.last_name} - ID {item.id}
+                          {item.first_name} {item.last_name} — ID {item.id}
                         </option>
                       ))}
                     </select>
                   </label>
                   <label>
-                    Rol
+                    Role
                     <select
                       value={credentialsForm.role_id}
                       onChange={(e) => setCredentialsForm({ ...credentialsForm, role_id: e.target.value })}
                     >
                       {roleOptions.map((role) => (
-                        <option key={role.id} value={role.id}>
-                          {role.label}
-                        </option>
+                        <option key={role.id} value={role.id}>{role.label}</option>
                       ))}
                     </select>
                   </label>
@@ -279,7 +279,7 @@ export default function Users() {
                     />
                   </label>
                   <label>
-                    Contraseña
+                    Password
                     <input
                       type="password"
                       value={credentialsForm.password}
@@ -287,7 +287,7 @@ export default function Users() {
                     />
                   </label>
                   <label>
-                    Confirmar contraseña
+                    Confirm password
                     <input
                       type="password"
                       value={credentialsForm.confirmPassword}
@@ -298,22 +298,23 @@ export default function Users() {
               ) : (
                 <>
                   {formError && <p className="mg-error">{formError}</p>}
-                  <label>Nombres<input disabled={modal === "details"} value={form.first_name || ""} onChange={(e) => setForm({ ...form, first_name: e.target.value })} /></label>
-                  <label>Apellidos<input disabled={modal === "details"} value={form.last_name || ""} onChange={(e) => setForm({ ...form, last_name: e.target.value })} /></label>
-                  <label>Documento<input disabled={modal === "details"} value={form.document || ""} onChange={(e) => setForm({ ...form, document: e.target.value })} /></label>
-                  <label>Teléfono<input disabled={modal === "details"} value={form.phone || ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></label>
+                  <label>First name<input disabled={modal === "details"} value={form.first_name || ""} onChange={(e) => setForm({ ...form, first_name: e.target.value })} /></label>
+                  <label>Last name<input  disabled={modal === "details"} value={form.last_name  || ""} onChange={(e) => setForm({ ...form, last_name:  e.target.value })} /></label>
+                  <label>Document<input   disabled={modal === "details"} value={form.document   || ""} onChange={(e) => setForm({ ...form, document:   e.target.value })} /></label>
+                  <label>Phone<input      disabled={modal === "details"} value={form.phone      || ""} onChange={(e) => setForm({ ...form, phone:      e.target.value })} /></label>
                 </>
               )}
             </div>
+
             <div className="dev-modal-foot">
-              <button className="mg-btn-secondary" onClick={() => setModal(null)}>Cerrar</button>
+              <button className="mg-btn-secondary" onClick={() => setModal(null)}>Close</button>
               {modal !== "details" && (
                 <button
                   className="mg-btn-primary"
                   onClick={modal === "credentials" ? registerCredentials : save}
                   disabled={credentialsSubmitting}
                 >
-                  {modal === "credentials" ? "Registrar" : "Guardar"}
+                  {modal === "credentials" ? "Register" : "Save"}
                 </button>
               )}
             </div>

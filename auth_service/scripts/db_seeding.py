@@ -16,24 +16,23 @@ def seed_roles():
                 nuevo_rol = Role(id=r['id'], role_name=r['role_name'])
                 db.session.add(nuevo_rol)
             db.session.commit()
-            print(" Roles creados exitosamente.")
+            print(" Roles successfully created.")
     except Exception as e:
         db.session.rollback()
-        print(f"Error al crear los roles: {e}")
+        print(f"Error creating roles: {e}")
         
 def seed_admin():
-    """Crea una credencial ADMIN inicial si no existe."""
     try:
         existing_admin = UserCredentials.query.filter_by(username="admin").first()
 
         if existing_admin:
-            print("El usuario admin ya existe.")
+            print("The admin user already exists.")
             return
 
         admin_role = Role.query.get(1)
 
         if not admin_role:
-            print("No existe el rol ADMIN. Ejecuta primero seed_roles().")
+            print("The ADMIN role does not exist. Please run seed_roles() first.")
             return
 
         admin_user = UserCredentials(
@@ -46,9 +45,9 @@ def seed_admin():
         db.session.add(admin_user)
         db.session.commit()
 
-        print("Usuario admin creado exitosamente.")
+        print("Admin user created successfully.")
 
     except Exception as e:
         db.session.rollback()
-        print(f"Error al crear el usuario admin: {e}")
+        print(f"Error creating admin user: {e}")
 

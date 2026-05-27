@@ -17,7 +17,7 @@ def get_device_type_by_id(device_type_id):
     device_type = DeviceType.query.get(device_type_id)
 
     if not device_type:
-        return {"error": "Tipo de dispositivo no encontrado"}, 404
+        return {"error": "Device type not found"}, 404
 
     return serialize_device_type(device_type)
 
@@ -29,12 +29,12 @@ def create_device_type(data):
     is_active = data.get("is_active", True)
 
     if not name:
-        return {"error": "El campo name es obligatorio"}, 400
+        return {"error": "The name field is required"}, 400
 
     existing_device_type = DeviceType.query.filter_by(name=name).first()
 
     if existing_device_type:
-        return {"error": "Ya existe un tipo de dispositivo con ese nombre"}, 400
+        return {"error": "A device type with that name already exists"}, 400
 
     new_device_type = DeviceType(
         name=name,
@@ -47,7 +47,7 @@ def create_device_type(data):
     db.session.commit()
 
     return {
-        "mensaje": "Tipo de dispositivo creado exitosamente",
+        "message": "Device type created successfully",
         "device_type": serialize_device_type(new_device_type)
     }, 201
 
@@ -56,7 +56,7 @@ def update_device_type(device_type_id, data):
     device_type = DeviceType.query.get(device_type_id)
 
     if not device_type:
-        return {"mensaje": "Tipo de dispositivo no encontrado"}, 404
+        return {"message": "Device type not found"}, 404
 
     new_name = data.get("name")
 
@@ -68,7 +68,7 @@ def update_device_type(device_type_id, data):
             ).first()
 
             if existing_device_type:
-                return {"error": "El nombre del tipo de dispositivo ya está registrado"}, 400
+                return {"error": "A device type with that name already exists"}, 400
 
             device_type.name = new_name
 
@@ -79,7 +79,7 @@ def update_device_type(device_type_id, data):
     db.session.commit()
 
     return {
-        "mensaje": "Tipo de dispositivo actualizado correctamente",
+        "message": "Device type updated successfully",
         "device_type": serialize_device_type(device_type)
     }, 200
 
@@ -88,12 +88,12 @@ def delete_device_type(device_type_id):
     device_type = DeviceType.query.get(device_type_id)
 
     if not device_type:
-        return {"error": "Tipo de dispositivo no encontrado"}, 404
+        return {"error": "Device type not found"}, 404
 
     db.session.delete(device_type)
     db.session.commit()
 
-    return {"mensaje": "Tipo de dispositivo eliminado exitosamente"}, 200
+    return {"message": "Device type deleted successfully"}, 200
 
 
 def serialize_device_type(device_type):

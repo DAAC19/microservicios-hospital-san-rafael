@@ -14,39 +14,35 @@ function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setForm({
-        ...form,
-        [e.target.name]: e.target.value,
+      ...form,
+      [e.target.name]: e.target.value,
     });
-    };
+  };
 
-const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-
-  setError("");
-  setLoading(true);
-
-  try {
-    const data = await login(form);
-
-    console.log("Token recibido:", data.token);
-
-    localStorage.setItem("token", data.token);
-
-    navigate("/dashboard");
-  } catch (error) {
-    console.error(error);
-    setError("Usuario o contraseña incorrectos.");
-  } finally {
-    setLoading(false);
-  }
-};
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const data = await login(form);
+      console.log("Token received:", data.token);
+      localStorage.setItem("token", data.token);
+      navigate("/dashboard");
+    } catch (error) {
+      console.error(error);
+      setError("Incorrect username or password.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Poppins:wght@600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,700;0,800;1,700&display=swap');
+        @import url('https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css');
 
         :root {
           --primary: #0d6efd;
@@ -60,7 +56,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         }
 
         * {
-          font-family: 'Sora', sans-serif;
+          font-family: 'DM Sans', sans-serif;
         }
 
         html {
@@ -88,7 +84,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
           position: absolute;
           width: 500px;
           height: 500px;
-          background: radial-gradient(circle, rgba(255, 255, 255, 0.1), transparent);
+          background: radial-gradient(circle, rgba(255,255,255,0.1), transparent);
           border-radius: 50%;
           top: -100px;
           right: -100px;
@@ -100,7 +96,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
           position: absolute;
           width: 300px;
           height: 300px;
-          background: radial-gradient(circle, rgba(255, 255, 255, 0.05), transparent);
+          background: radial-gradient(circle, rgba(255,255,255,0.05), transparent);
           border-radius: 50%;
           bottom: -50px;
           left: 10%;
@@ -114,14 +110,8 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         }
 
         @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes pulse {
@@ -140,7 +130,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         .login-card {
           background: white;
           border-radius: 20px;
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 20px 60px rgba(0,0,0,0.3);
           overflow: hidden;
           position: relative;
         }
@@ -174,12 +164,11 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
           justify-content: center;
           margin: 0 auto 1.5rem;
           object-fit: contain;
-          box-shadow: 0 10px 30px rgba(13, 110, 253, 0.2);
-          animation: none;
+          box-shadow: 0 10px 30px rgba(13,110,253,0.2);
         }
 
         .login-title {
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Fraunces', serif;
           font-size: 1.8rem;
           font-weight: 800;
           color: var(--dark);
@@ -195,22 +184,22 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         }
 
         .error-alert {
-          background: #fee;
-          border: 1px solid #fcc;
+          background: #fff1f2;
+          border: 1px solid #fecdd3;
           color: var(--error);
           padding: 1rem 1.25rem;
           border-radius: 12px;
           margin-bottom: 1.5rem;
-          font-size: 0.95rem;
+          font-size: 0.9rem;
           display: flex;
           align-items: center;
-          gap: 0.75rem;
+          gap: 0.6rem;
           animation: slideUp 0.3s ease-out;
         }
 
-        .error-alert::before {
-          content: '⚠️';
-          font-size: 1.2rem;
+        .error-alert i {
+          font-size: 1.1rem;
+          flex-shrink: 0;
         }
 
         .form-group {
@@ -222,8 +211,8 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
           font-weight: 600;
           color: var(--dark);
           margin-bottom: 0.65rem;
-          font-size: 0.95rem;
-          letter-spacing: -0.3px;
+          font-size: 0.9rem;
+          letter-spacing: -0.2px;
         }
 
         .form-input {
@@ -234,18 +223,26 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
           font-size: 1rem;
           transition: all 0.3s ease;
           background: #f9fafb;
-          font-family: 'Sora', sans-serif;
+          font-family: 'DM Sans', sans-serif;
+          color: var(--dark);
         }
 
         .form-input:focus {
           outline: none;
           border-color: var(--primary);
           background: white;
-          box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+          box-shadow: 0 0 0 4px rgba(13,110,253,0.1);
         }
 
         .form-input::placeholder {
           color: #9ca3af;
+          font-family: 'DM Mono', monospace;
+          font-size: 0.9rem;
+        }
+
+        .form-input:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
         }
 
         .password-wrapper {
@@ -264,14 +261,18 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
           cursor: pointer;
           transition: all 0.3s ease;
           margin-top: 0.5rem;
-          font-family: 'Sora', sans-serif;
-          letter-spacing: -0.3px;
-          box-shadow: 0 10px 30px rgba(13, 110, 253, 0.2);
+          font-family: 'DM Sans', sans-serif;
+          letter-spacing: -0.2px;
+          box-shadow: 0 10px 30px rgba(13,110,253,0.2);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
         }
 
         .submit-button:hover:not(:disabled) {
           transform: translateY(-2px);
-          box-shadow: 0 15px 40px rgba(13, 110, 253, 0.3);
+          box-shadow: 0 15px 40px rgba(13,110,253,0.3);
         }
 
         .submit-button:active:not(:disabled) {
@@ -298,36 +299,33 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
           font-weight: 600;
           cursor: pointer;
           text-decoration: none;
-          transition: all 0.3s ease;
-          font-size: 0.95rem;
-          font-family: 'Sora', sans-serif;
+          transition: color 0.2s ease;
+          font-size: 0.9rem;
+          font-family: 'DM Sans', sans-serif;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
         }
 
         .back-link:hover {
           color: var(--primary-dark);
-          gap: 0.5rem;
-        }
-
-        .back-link::before {
-          content: '← ';
-          margin-right: 0.25rem;
         }
 
         .login-footer-text {
           color: var(--gray);
-          font-size: 0.85rem;
-          margin-top: 1.5rem;
+          font-size: 0.8rem;
+          margin-top: 1.25rem;
+          font-family: 'DM Mono', monospace;
         }
 
         .loading-spinner {
           display: inline-block;
           width: 1rem;
           height: 1rem;
-          border: 2px solid rgba(255, 255, 255, 0.3);
+          border: 2px solid rgba(255,255,255,0.3);
           border-top-color: white;
           border-radius: 50%;
           animation: spin 0.8s linear infinite;
-          margin-right: 0.5rem;
         }
 
         @keyframes spin {
@@ -335,19 +333,9 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         }
 
         @media (max-width: 480px) {
-          .login-card-body {
-            padding: 2rem 1.5rem;
-          }
-
-          .login-title {
-            font-size: 1.5rem;
-          }
-
-          .login-icon {
-            width: 70px;
-            height: 70px;
-            font-size: 2rem;
-          }
+          .login-card-body { padding: 2rem 1.5rem; }
+          .login-title { font-size: 1.5rem; }
+          .login-icon { width: 70px; height: 70px; }
         }
       `}</style>
 
@@ -355,18 +343,20 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         <div className="login-wrapper">
           <div className="login-card">
             <div className="login-card-body">
+
               {/* Header */}
               <div className="login-header">
-                <img className="login-icon" src={logoHSF} alt="Hospital San Rafael" />
-                <h1 className="login-title">Bienvenido</h1>
+                <img className="login-icon" src={logoHSF} alt="San Rafael Hospital" />
+                <h1 className="login-title">Welcome back</h1>
                 <p className="login-subtitle">
-                  Inicia sesión para acceder al sistema de monitoreo hospitalario
+                  Sign in to access the hospital monitoring system
                 </p>
               </div>
 
               {/* Error */}
               {error && (
                 <div className="error-alert">
+                  <i className="ti ti-alert-triangle" aria-hidden="true"></i>
                   {error}
                 </div>
               )}
@@ -374,12 +364,15 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
               {/* Form */}
               <form onSubmit={handleSubmit}>
                 <div className="form-group">
-                  <label className="form-label">Nombre de usuario</label>
+                  <label className="form-label">
+                    <i className="ti ti-user" style={{ fontSize: "14px", marginRight: "6px", verticalAlign: "-2px" }} aria-hidden="true"></i>
+                    Username
+                  </label>
                   <input
                     type="text"
                     name="username"
                     className="form-input"
-                    placeholder="ejemplo@hospital.com"
+                    placeholder="user@hospital.com"
                     value={form.username}
                     onChange={handleChange}
                     required
@@ -388,7 +381,10 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Contraseña</label>
+                  <label className="form-label">
+                    <i className="ti ti-lock" style={{ fontSize: "14px", marginRight: "6px", verticalAlign: "-2px" }} aria-hidden="true"></i>
+                    Password
+                  </label>
                   <div className="password-wrapper">
                     <input
                       type="password"
@@ -411,26 +407,28 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
                   {loading ? (
                     <>
                       <span className="loading-spinner"></span>
-                      Ingresando...
+                      Signing in…
                     </>
                   ) : (
-                    "Ingresar al sistema"
+                    <>
+                      <i className="ti ti-login" aria-hidden="true"></i>
+                      Sign in to system
+                    </>
                   )}
                 </button>
               </form>
 
               {/* Footer */}
               <div className="login-footer">
-                <button
-                  className="back-link"
-                  onClick={() => navigate("/")}
-                >
-                  Volver al inicio
+                <button className="back-link" onClick={() => navigate("/")}>
+                  <i className="ti ti-arrow-left" aria-hidden="true"></i>
+                  Back to home
                 </button>
                 <p className="login-footer-text">
-                  Hospital San Rafael · Plataforma de microservicios
+                  San Rafael Hospital · Microservices platform
                 </p>
               </div>
+
             </div>
           </div>
         </div>

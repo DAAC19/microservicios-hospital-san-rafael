@@ -27,7 +27,7 @@ const decodeToken = (token: string): TokenPayload => {
   const parts = cleanToken.split(".");
 
   if (parts.length !== 3) {
-    throw new Error("Token inválido");
+    throw new Error("Invalid token");
   }
 
   const payload = parts[1];
@@ -60,8 +60,8 @@ export const login = async (
   const token = extractToken(response.data);
 
   if (!token || typeof token !== "string") {
-    console.error("Respuesta inesperada del login:", response.data);
-    throw new Error("El backend no devolvió un token válido");
+    console.error("Unexpected response from login:", response.data);
+    throw new Error("The backend did not return a valid token");
   }
 
   return {
@@ -77,7 +77,7 @@ export const getUserProfile = async (): Promise<User> => {
   const token = localStorage.getItem("token");
 
   if (!token) {
-    throw new Error("Token no encontrado");
+    throw new Error("Token not found");
   }
 
   const decoded = decodeToken(token);
@@ -85,7 +85,7 @@ export const getUserProfile = async (): Promise<User> => {
   return {
     id: decoded.user_id || decoded.credential_id || "",
     credential_id: decoded.credential_id || "",
-    username: decoded.username || "Usuario",
+    username: decoded.username || "User",
     role: normalizeRole(decoded.role || "USER"),
     role_name: decoded.role as User["role_name"],
   };

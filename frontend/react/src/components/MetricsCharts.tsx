@@ -104,8 +104,8 @@ export default function MetricsCharts({ metrics, metricTypes }: Props) {
     <div className="db-card">
       <div className="db-card-head">
         <div>
-          <div className="db-card-title">Métricas del sistema</div>
-          <div className="db-card-sub">Últimas lecturas por tipo de métrica</div>
+          <div className="db-card-title">System Metrics</div>
+          <div className="db-card-sub">Latest readings by metric type</div>
         </div>
       </div>
       <div style={{ padding: "1.25rem" }}>

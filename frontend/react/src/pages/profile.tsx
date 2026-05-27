@@ -29,8 +29,8 @@ export default function Profile() {
       setProfile(data);
       setForm(data);
     } catch (error) {
-      console.warn("No se pudo cargar tu información básica", error);
-      setError("No se pudo cargar tu información básica. Vuelve a iniciar sesión si el token es anterior a esta versión.");
+      console.warn("Could not load your basic information", error);
+      setError("Could not load your basic information. Please log in again if your token predates this version.");
     } finally {
       setLoading(false);
     }
@@ -46,7 +46,7 @@ export default function Profile() {
   const save = async () => {
     if (!authUser || !profile) return;
     if (!form.first_name?.trim() || !form.last_name?.trim() || !form.document?.trim() || !form.phone?.trim()) {
-      setError("Todos los campos son obligatorios.");
+      setError("All fields are required.");
       return;
     }
     setError("");
@@ -60,34 +60,34 @@ export default function Profile() {
       });
       setProfile(updated);
       setForm(updated);
-      setSuccess("Perfil actualizado correctamente.");
+      setSuccess("Profile updated successfully.");
     } catch (err) {
       setError((err as Error).message);
     }
   };
 
-  if (!authUser) return <div className="mg-loading">Cargando...</div>;
+  if (!authUser) return <div className="mg-loading">Loading...</div>;
 
   return (
     <AppChrome user={authUser} active="profile">
       <div className="mg-page-header">
         <div>
-          <h1 className="mg-page-title">Perfil</h1>
-          <p className="mg-page-sub">Información básica del usuario autenticado</p>
+          <h1 className="mg-page-title">Profile</h1>
+          <p className="mg-page-sub">Basic information of the authenticated user</p>
         </div>
       </div>
 
       <div className="mg-card" style={{ maxWidth: 720 }}>
-        {loading ? <div className="mg-state">Cargando perfil...</div> : (
+        {loading ? <div className="mg-state">Loading profile...</div> : (
           <div className="dev-modal-body">
             {error && <p className="mg-error">{error}</p>}
             {success && <p className="mg-badge active">{success}</p>}
-            <label>Nombres<input value={form.first_name || ""} onChange={(e) => setForm({ ...form, first_name: e.target.value })} /></label>
-            <label>Apellidos<input value={form.last_name || ""} onChange={(e) => setForm({ ...form, last_name: e.target.value })} /></label>
-            <label>Documento<input value={form.document || ""} onChange={(e) => setForm({ ...form, document: e.target.value })} /></label>
-            <label>Teléfono<input value={form.phone || ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></label>
+            <label>First Name<input value={form.first_name || ""} onChange={(e) => setForm({ ...form, first_name: e.target.value })} /></label>
+            <label>Last Name<input value={form.last_name || ""} onChange={(e) => setForm({ ...form, last_name: e.target.value })} /></label>
+            <label>Document<input value={form.document || ""} onChange={(e) => setForm({ ...form, document: e.target.value })} /></label>
+            <label>Phone<input value={form.phone || ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></label>
             <div>
-              <button className="mg-btn-primary" onClick={save} disabled={!profile}>Guardar cambios</button>
+              <button className="mg-btn-primary" onClick={save} disabled={!profile}>Save changes</button>
             </div>
           </div>
         )}

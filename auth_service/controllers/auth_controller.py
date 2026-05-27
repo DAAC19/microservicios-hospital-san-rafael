@@ -25,7 +25,7 @@ def login(data):
     password = data.get("password")
 
     if not username or not password:
-        return {"Error": "username y password son obligatorios"}, 400
+        return {"Error": "Username and password are required"}, 400
 
     user = UserCredentials.query.filter_by(username=username).first()
 
@@ -38,7 +38,7 @@ def login(data):
     role = Role.query.get(user.role_id)
 
     if not role:
-        return {"Error": "Rol no encontrado"}, 404
+        return {"Error": "Role not found"}, 404
 
     token = generate_token(user, role)
 
@@ -52,17 +52,17 @@ def register(data):
     role_id = data.get("role_id")
 
     if not username or not user_id or not password:
-        return {"Error": "username, user_id y password son obligatorios"}, 400
+        return {"Error": "Username, user_id and password are required"}, 400
 
     if UserCredentials.query.filter_by(username=username).first():
-        return {"Error": "El usuario ya existe"}, 400
+        return {"Error": "User already exists"}, 400
 
     if UserCredentials.query.filter_by(user_id=user_id).first():
-        return {"Error": "Este user_id ya tiene credenciales asociadas"}, 400
-    
+        return {"Error": "This user_id already has associated credentials"}, 400
+
     role = Role.query.get(role_id)
     if not role:
-        return {"Error": "El role_id no existe"}, 404
+        return {"Error": "Role not found"}, 404
 
     hashed_password = generate_password_hash(password)
 
@@ -76,4 +76,4 @@ def register(data):
     db.session.add(new_user)
     db.session.commit()
 
-    return {"Mensaje": "Usuario registrado exitosamente"}, 201
+    return {"Message": "User registered successfully"}, 201

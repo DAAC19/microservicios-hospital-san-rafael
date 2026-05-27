@@ -30,26 +30,26 @@ export default function DeviceDetailsModal({ device, deviceTypes = [], locations
 
   const rows = [
     ["ID", device.id],
-    ["Nombre", device.name],
+    ["Name", device.name],
     ["Hostname", device.hostname],
     ["IP", device.ip_address],
     ["Serial", device.serial_number],
-    ["Marca", device.brand],
-    ["Modelo", device.model],
-    ["Estado", device.status],
-    ["Tipo", type ? `${type.name}${type.category ? ` (${type.category})` : ""}` : device.device_type_id],
-    ["Ubicación", location ? `${location.name}${location.room ? ` - ${location.room}` : ""}` : device.location_id],
-    ["Usuario asignado", assignedUser ? `${assignedUser.first_name} ${assignedUser.last_name}` : device.user_id],
-    ["Descripción", device.description],
-    ["Creado", formatDate(device.created_at)],
-    ["Actualizado", formatDate(device.updated_at)],
+    ["Brand", device.brand],
+    ["Model", device.model],
+    ["Status", device.status],
+    ["Type", type ? `${type.name}${type.category ? ` (${type.category})` : ""}` : device.device_type_id],
+    ["Location", location ? `${location.name}${location.room ? ` - ${location.room}` : ""}` : device.location_id],
+    ["Assigned User", assignedUser ? `${assignedUser.first_name} ${assignedUser.last_name}` : device.user_id],
+    ["Description", device.description],
+    ["Created", formatDate(device.created_at)],
+    ["Updated", formatDate(device.updated_at)],
   ];
 
   return (
     <div className="dev-overlay" onClick={onClose}>
       <div className="dev-modal dev-modal-lg" onClick={(event) => event.stopPropagation()}>
         <div className="dev-modal-head">
-          <h2 className="dev-modal-title">Detalle del dispositivo</h2>
+          <h2 className="dev-modal-title">Device Details</h2>
           <button className="dev-modal-close" onClick={onClose} type="button">x</button>
         </div>
         <div className="dev-detail-grid">

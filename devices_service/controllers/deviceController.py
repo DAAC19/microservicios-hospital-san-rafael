@@ -97,28 +97,28 @@ def create_device(data):
     user_id = data.get("user_id")
 
     if not name:
-        return {"error": "El campo name es obligatorio"}, 400
+        return {"error": "The name field is required"}, 400
     if not device_type_id:
-        return {"error": "El campo device_type_id es obligatorio"}, 400
+        return {"error": "The device_type_id field is required"}, 400
     if status not in VALID_STATUSES:
         return {
-            "error": "Estado inválido",
+            "error": "Invalid status",
             "allowed_statuses": VALID_STATUSES
         }, 400
 
     device_type = DeviceType.query.get(device_type_id)
 
     if not device_type:
-        return {"error": "El tipo de dispositivo no existe"}, 400
+        return {"error": "The device type does not exist"}, 400
     if device_type.is_active is False:
-        return {"error": "El tipo de dispositivo está inactivo"}, 400
+        return {"error": "The device type is inactive"}, 400
     user_validation = validate_user(user_id)
     
     if user_validation is None:
         return {"error": "Users service unavailable"}, 500
     
     if not user_validation:
-        return {"error": "No se puede crear el dispositivo porque el usuario no existe"}, 400
+        return {"error": "The device cannot be created because the user does not exist"}, 400
 
     location_validation = validate_location(location_id)
 
@@ -126,7 +126,7 @@ def create_device(data):
         return {"error": "Locations service unavailable"}, 500
 
     if not location_validation:
-        return {"error": "No se puede crear el dispositivo porque la ubicación no existe"}, 400
+        return {"error": "The device cannot be created because the location does not exist."}, 400
 
     new_device = Device(
         name=name,
@@ -146,7 +146,7 @@ def create_device(data):
     db.session.commit()
 
     return {
-        "mensaje": "Dispositivo creado exitosamente",
+        "message": "Device created successfully",
         "device": serialize_device(new_device)
     }, 201
 
@@ -155,7 +155,7 @@ def update_device(device_id, data):
     device = Device.query.get(device_id)
 
     if not device:
-        return {"mensaje": "Dispositivo no encontrado"}, 404
+        return {"message": "Device not found"}, 404
 
     new_device_type_id = data.get("device_type_id")
 
@@ -163,7 +163,7 @@ def update_device(device_id, data):
         device_type = DeviceType.query.get(new_device_type_id)
 
         if not device_type:
-            return {"error": "El tipo de dispositivo no existe"}, 400
+            return {"error": "The device type does not exist"}, 400
 
         device.device_type_id = new_device_type_id
 
@@ -174,7 +174,7 @@ def update_device(device_id, data):
 
         if new_status not in valid_statuses:
             return {
-                "error": "Estado inválido",
+                "error": "Invalid status",
                 "allowed_statuses": valid_statuses
             }, 400
 
@@ -193,7 +193,7 @@ def update_device(device_id, data):
     db.session.commit()
 
     return {
-        "mensaje": "Dispositivo actualizado correctamente",
+        "message": "Device updated successfully",
         "device": serialize_device(device)
     }, 200
 
@@ -202,12 +202,12 @@ def delete_device(device_id):
     device = Device.query.get(device_id)
 
     if not device:
-        return {"error": "Dispositivo no encontrado"}, 404
+        return {"error": "Device not found"}, 404
 
     db.session.delete(device)
     db.session.commit()
 
-    return {"mensaje": "Dispositivo eliminado exitosamente"}, 200
+    return {"message": "Device deleted successfully"}, 200
 
 
 def serialize_device(device):

@@ -26,10 +26,10 @@ export default function LogoutModal({ onCancel }: Props) {
       }}>
         <div style={{ fontSize: "2rem", textAlign: "center", marginBottom: "1rem" }}>👋</div>
         <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: "1.2rem", fontWeight: 800, color: "#0f172a", textAlign: "center", marginBottom: 8 }}>
-          ¿Cerrar sesión?
+          Log out?
         </h3>
         <p style={{ color: "#64748b", fontSize: "0.875rem", textAlign: "center", marginBottom: "1.5rem", lineHeight: 1.6 }}>
-          Tu sesión actual se cerrará. Tendrás que iniciar sesión de nuevo para acceder al sistema.
+          Your current session will be closed. You will need to log in again to access the system.
         </p>
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={onCancel} style={{
@@ -37,14 +37,14 @@ export default function LogoutModal({ onCancel }: Props) {
             background: "#f8fafc", color: "#475569", fontWeight: 600,
             cursor: "pointer", fontSize: "0.875rem", fontFamily: "'DM Sans', sans-serif",
           }}>
-            Cancelar
+            Cancel
           </button>
           <button onClick={confirmLogout} style={{
             flex: 1, padding: "0.7rem", borderRadius: 8, border: "none",
             background: "#ef4444", color: "#fff", fontWeight: 700,
             cursor: "pointer", fontSize: "0.875rem", fontFamily: "'DM Sans', sans-serif",
           }}>
-            Sí, cerrar sesión
+            Yes, log out
           </button>
         </div>
       </div>

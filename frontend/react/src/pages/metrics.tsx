@@ -28,17 +28,8 @@ interface TypeForm {
   description: string;
 }
 
-const EMPTY_METRIC_FORM: MetricForm = {
-  device_id: "",
-  metric_type_id: "",
-  value: "",
-};
-
-const EMPTY_TYPE_FORM: TypeForm = {
-  name: "",
-  unit: "",
-  description: "",
-};
+const EMPTY_METRIC_FORM: MetricForm = { device_id: "", metric_type_id: "", value: "" };
+const EMPTY_TYPE_FORM: TypeForm = { name: "", unit: "", description: "" };
 
 export default function Metrics() {
   const navigate = useNavigate();
@@ -73,33 +64,19 @@ export default function Metrics() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    getUserProfile()
-      .then(setUser)
-      .catch(() => {
-        logout();
-        navigate("/login");
-      });
+    getUserProfile().then(setUser).catch(() => { logout(); navigate("/login"); });
   }, [navigate]);
 
   const fetchMetrics = useCallback(async () => {
     setMetricsLoading(true);
     setMetricsError(null);
-
     try {
       const filters: Record<string, string | number> = {};
-
-      if (filterDeviceId.trim()) {
-        filters.device_id = filterDeviceId.trim();
-      }
-
-      if (filterTypeId.trim()) {
-        filters.metric_type_id = filterTypeId.trim();
-      }
-
-      const data = await getMetrics(filters);
-      setMetrics(data);
+      if (filterDeviceId.trim()) filters.device_id = filterDeviceId.trim();
+      if (filterTypeId.trim()) filters.metric_type_id = filterTypeId.trim();
+      setMetrics(await getMetrics(filters));
     } catch (e: unknown) {
-      console.warn("No se pudieron cargar las métricas", e);
+      console.warn("Could not load metrics", e);
       setMetricsError((e as Error).message);
     } finally {
       setMetricsLoading(false);
@@ -109,53 +86,38 @@ export default function Metrics() {
   const fetchTypes = useCallback(async () => {
     setTypesLoading(true);
     setTypesError(null);
-
     try {
-      const data = await getMetricTypes();
-      setTypes(data);
+      setTypes(await getMetricTypes());
     } catch (e: unknown) {
-      console.warn("No se pudieron cargar los tipos de métricas", e);
+      console.warn("Could not load metric types", e);
       setTypesError((e as Error).message);
     } finally {
       setTypesLoading(false);
     }
   }, []);
 
+  useEffect(() => { void fetchMetrics(); }, [fetchMetrics]);
   useEffect(() => {
-    void fetchMetrics();
-  }, [fetchMetrics]);
-
-  useEffect(() => {
-    if (user && user.role !== "user") {
-      void fetchTypes();
-    }
+    if (user && user.role !== "user") void fetchTypes();
   }, [user, fetchTypes]);
 
   const handleCreateMetric = async () => {
-    if (
-      !metricForm.device_id.trim() ||
-      !metricForm.metric_type_id.trim() ||
-      !metricForm.value.trim()
-    ) {
-      setMetricFormError("Todos los campos son obligatorios.");
+    if (!metricForm.device_id.trim() || !metricForm.metric_type_id.trim() || !metricForm.value.trim()) {
+      setMetricFormError("All fields are required.");
       return;
     }
-
     if (isNaN(Number(metricForm.value))) {
-      setMetricFormError("El valor debe ser un número.");
+      setMetricFormError("Value must be a number.");
       return;
     }
-
     setMetricSaving(true);
     setMetricFormError(null);
-
     try {
       const created = await createMetric({
         device_id: Number(metricForm.device_id),
         metric_type_id: Number(metricForm.metric_type_id),
         value: Number(metricForm.value),
       });
-
       setMetrics((prev) => [created, ...prev]);
       setShowMetricModal(false);
       setMetricForm(EMPTY_METRIC_FORM);
@@ -168,9 +130,7 @@ export default function Metrics() {
 
   const handleDeleteMetric = async () => {
     if (!deleteMetricTarget) return;
-
     setDeleting(true);
-
     try {
       await deleteMetric(deleteMetricTarget.id);
       setMetrics((prev) => prev.filter((m) => m.id !== deleteMetricTarget.id));
@@ -183,21 +143,15 @@ export default function Metrics() {
   };
 
   const handleCreateType = async () => {
-    if (!typeForm.name.trim()) {
-      setTypeFormError("El nombre es obligatorio.");
-      return;
-    }
-
+    if (!typeForm.name.trim()) { setTypeFormError("Name is required."); return; }
     setTypeSaving(true);
     setTypeFormError(null);
-
     try {
       const created = await createMetricType({
         name: typeForm.name.trim(),
         unit: typeForm.unit.trim() || undefined,
         description: typeForm.description.trim() || undefined,
       });
-
       setTypes((prev) => [created, ...prev]);
       setShowTypeModal(false);
       setTypeForm(EMPTY_TYPE_FORM);
@@ -210,9 +164,7 @@ export default function Metrics() {
 
   const handleDeleteType = async () => {
     if (!deleteTypeTarget) return;
-
     setDeleting(true);
-
     try {
       await deleteMetricType(deleteTypeTarget.id);
       setTypes((prev) => prev.filter((t) => t.id !== deleteTypeTarget.id));
@@ -226,24 +178,19 @@ export default function Metrics() {
 
   const formatDate = (val?: string) => {
     if (!val) return "—";
-
-    return new Date(val).toLocaleString("es-CO", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+    return new Date(val).toLocaleString("en-US", {
+      day: "2-digit", month: "short", year: "numeric",
+      hour: "2-digit", minute: "2-digit",
     });
   };
 
   const getTypeName = (id: string | number) => {
     const t = types.find((type) => String(type.id) === String(id));
-    return t ? `${t.name}${t.unit ? ` (${t.unit})` : ""}` : `Tipo ${id}`;
+    return t ? `${t.name}${t.unit ? ` (${t.unit})` : ""}` : `Type ${id}`;
   };
 
   const filteredMetrics = metrics.filter((m) => {
     const q = search.toLowerCase();
-
     return (
       String(m.device_id).includes(q) ||
       (m.metric_type ?? "").toLowerCase().includes(q) ||
@@ -253,7 +200,6 @@ export default function Metrics() {
 
   const filteredTypes = types.filter((t) => {
     const q = search.toLowerCase();
-
     return (
       t.name.toLowerCase().includes(q) ||
       (t.unit ?? "").toLowerCase().includes(q) ||
@@ -263,21 +209,16 @@ export default function Metrics() {
 
   const permissions = user ? rolePermissionsMap[user.role] : null;
 
-  if (!user) {
-    return <div className="mg-loading">Cargando...</div>;
-  }
+  if (!user) return <div className="mg-loading">Loading...</div>;
 
   return (
     <AppChrome user={user} active="metrics">
       <div className="mx-root">
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,700;0,800;1,700&display=swap');
+          @import url('https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css');
 
-          *, *::before, *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-          }
+          *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
           .mx-root {
             min-height: auto;
@@ -325,11 +266,7 @@ export default function Metrics() {
             border-radius: 20px;
           }
 
-          .mx-page-sub {
-            color: #64748b;
-            font-size: 0.875rem;
-            margin-top: 4px;
-          }
+          .mx-page-sub { color: #64748b; font-size: 0.875rem; margin-top: 4px; }
 
           .mx-tabs {
             display: flex;
@@ -358,14 +295,8 @@ export default function Metrics() {
             gap: 7px;
           }
 
-          .mx-tab:hover {
-            color: #0f172a;
-          }
-
-          .mx-tab.active {
-            background: #0f172a;
-            color: #fff;
-          }
+          .mx-tab:hover { color: #0f172a; }
+          .mx-tab.active { background: #0f172a; color: #fff; }
 
           .mx-tab-badge {
             background: rgba(255,255,255,0.2);
@@ -375,10 +306,7 @@ export default function Metrics() {
             font-weight: 700;
           }
 
-          .mx-tab:not(.active) .mx-tab-badge {
-            background: #f1f5f9;
-            color: #64748b;
-          }
+          .mx-tab:not(.active) .mx-tab-badge { background: #f1f5f9; color: #64748b; }
 
           .mx-toolbar {
             display: flex;
@@ -407,9 +335,9 @@ export default function Metrics() {
             transition: border-color 0.15s;
           }
 
-          .mx-search-wrap:focus-within {
-            border-color: #3b82f6;
-          }
+          .mx-search-wrap:focus-within { border-color: #3b82f6; }
+
+          .mx-search-icon { color: #94a3b8; font-size: 16px; display: flex; align-items: center; }
 
           .mx-search-input {
             border: none;
@@ -427,8 +355,11 @@ export default function Metrics() {
             border: none;
             color: #94a3b8;
             cursor: pointer;
-            font-size: 11px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
           }
+          .mx-search-clear:hover { color: #475569; }
 
           .mx-filter-input {
             padding: 8px 12px;
@@ -442,10 +373,7 @@ export default function Metrics() {
             transition: border-color 0.15s;
             width: 160px;
           }
-
-          .mx-filter-input:focus {
-            border-color: #3b82f6;
-          }
+          .mx-filter-input:focus { border-color: #3b82f6; }
 
           .mx-btn-filter {
             background: #f1f5f9;
@@ -458,11 +386,11 @@ export default function Metrics() {
             cursor: pointer;
             font-family: 'DM Sans', sans-serif;
             transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
           }
-
-          .mx-btn-filter:hover {
-            background: #e2e8f0;
-          }
+          .mx-btn-filter:hover { background: #e2e8f0; }
 
           .mx-btn-primary {
             background: #3b82f6;
@@ -480,17 +408,8 @@ export default function Metrics() {
             gap: 6px;
             white-space: nowrap;
           }
-
-          .mx-btn-primary:hover {
-            background: #2563eb;
-            transform: translateY(-1px);
-          }
-
-          .mx-btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-          }
+          .mx-btn-primary:hover { background: #2563eb; transform: translateY(-1px); }
+          .mx-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
           .mx-card {
             background: #fff;
@@ -499,9 +418,7 @@ export default function Metrics() {
             overflow: hidden;
           }
 
-          .mx-table-wrap {
-            overflow-x: auto;
-          }
+          .mx-table-wrap { overflow-x: auto; }
 
           .mx-table {
             width: 100%;
@@ -509,9 +426,7 @@ export default function Metrics() {
             font-size: 0.875rem;
           }
 
-          .mx-table thead {
-            background: #f8fafc;
-          }
+          .mx-table thead { background: #f8fafc; }
 
           .mx-table th {
             padding: 10px 16px;
@@ -532,13 +447,8 @@ export default function Metrics() {
             vertical-align: middle;
           }
 
-          .mx-table tbody tr:last-child td {
-            border-bottom: none;
-          }
-
-          .mx-table tbody tr:hover td {
-            background: #f8fafc;
-          }
+          .mx-table tbody tr:last-child td { border-bottom: none; }
+          .mx-table tbody tr:hover td { background: #f8fafc; }
 
           .mx-td-num {
             color: #94a3b8;
@@ -547,10 +457,7 @@ export default function Metrics() {
             width: 48px;
           }
 
-          .mx-td-name {
-            font-weight: 600;
-            color: #0f172a;
-          }
+          .mx-td-name { font-weight: 600; color: #0f172a; }
 
           .mx-td-date {
             font-size: 0.75rem;
@@ -572,11 +479,7 @@ export default function Metrics() {
             border-radius: 6px;
           }
 
-          .mx-value-unit {
-            font-size: 0.7rem;
-            font-weight: 500;
-            color: #4ade80;
-          }
+          .mx-value-unit { font-size: 0.7rem; font-weight: 500; color: #4ade80; }
 
           .mx-type-chip {
             display: inline-flex;
@@ -614,10 +517,7 @@ export default function Metrics() {
             border-radius: 6px;
           }
 
-          .mx-td-actions {
-            text-align: right;
-            width: 60px;
-          }
+          .mx-td-actions { text-align: right; width: 60px; }
 
           .mx-btn-del {
             background: #fff1f2;
@@ -630,34 +530,16 @@ export default function Metrics() {
             cursor: pointer;
             transition: background 0.15s;
             font-family: 'DM Sans', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
           }
+          .mx-btn-del:hover { background: #ffe4e6; }
 
-          .mx-btn-del:hover {
-            background: #ffe4e6;
-          }
-
-          .mx-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: #94a3b8;
-          }
-
-          .mx-state-icon {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            opacity: 0.5;
-          }
-
-          .mx-state-title {
-            font-weight: 700;
-            color: #475569;
-            font-size: 0.95rem;
-            margin-bottom: 4px;
-          }
-
-          .mx-state-sub {
-            font-size: 0.8rem;
-          }
+          .mx-state { text-align: center; padding: 4rem 2rem; color: #94a3b8; }
+          .mx-state-icon { font-size: 2rem; color: #cbd5e1; margin-bottom: 10px; }
+          .mx-state-title { font-weight: 700; color: #475569; font-size: 0.95rem; margin-bottom: 4px; }
+          .mx-state-sub { font-size: 0.8rem; }
 
           .mx-spinner {
             width: 36px;
@@ -669,11 +551,7 @@ export default function Metrics() {
             margin: 0 auto 12px;
           }
 
-          @keyframes mx-spin {
-            to {
-              transform: rotate(360deg);
-            }
-          }
+          @keyframes mx-spin { to { transform: rotate(360deg); } }
 
           .mx-error-box {
             background: #fff1f2;
@@ -689,6 +567,8 @@ export default function Metrics() {
             gap: 12px;
           }
 
+          .mx-error-inner { display: flex; align-items: center; gap: 7px; }
+
           .mx-retry {
             background: #fff;
             border: 1px solid #fecdd3;
@@ -699,6 +579,9 @@ export default function Metrics() {
             font-weight: 600;
             cursor: pointer;
             font-family: 'DM Sans', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
           }
 
           .mx-overlay {
@@ -722,20 +605,11 @@ export default function Metrics() {
             animation: mx-modal-in 0.18s ease;
           }
 
-          .mx-modal-sm {
-            max-width: 420px;
-          }
+          .mx-modal-sm { max-width: 420px; }
 
           @keyframes mx-modal-in {
-            from {
-              opacity: 0;
-              transform: translateY(16px) scale(0.98);
-            }
-
-            to {
-              opacity: 1;
-              transform: translateY(0) scale(1);
-            }
+            from { opacity: 0; transform: translateY(16px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
           }
 
           .mx-modal-head {
@@ -760,17 +634,13 @@ export default function Metrics() {
             border-radius: 6px;
             cursor: pointer;
             color: #64748b;
-            font-size: 13px;
+            font-size: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: background 0.15s;
           }
-
-          .mx-modal-close:hover {
-            background: #e2e8f0;
-            color: #0f172a;
-          }
+          .mx-modal-close:hover { background: #e2e8f0; color: #0f172a; }
 
           .mx-modal-body {
             padding: 20px 24px;
@@ -804,20 +674,10 @@ export default function Metrics() {
 
           .mx-modal-body input:focus,
           .mx-modal-body textarea:focus,
-          .mx-modal-body select:focus {
-            border-color: #3b82f6;
-            background: #fff;
-          }
+          .mx-modal-body select:focus { border-color: #3b82f6; background: #fff; }
 
-          .mx-form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-          }
-
-          .mx-req {
-            color: #ef4444;
-          }
+          .mx-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+          .mx-req { color: #ef4444; }
 
           .mx-form-error {
             background: #fff1f2;
@@ -826,6 +686,9 @@ export default function Metrics() {
             border-radius: 8px;
             padding: 10px 14px;
             font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 7px;
           }
 
           .mx-modal-foot {
@@ -847,15 +710,8 @@ export default function Metrics() {
             font-family: 'DM Sans', sans-serif;
             transition: background 0.15s;
           }
-
-          .mx-btn-cancel:hover {
-            background: #e2e8f0;
-          }
-
-          .mx-btn-cancel:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-          }
+          .mx-btn-cancel:hover { background: #e2e8f0; }
+          .mx-btn-cancel:disabled { opacity: 0.5; cursor: not-allowed; }
 
           .mx-btn-danger {
             background: #ef4444;
@@ -868,108 +724,82 @@ export default function Metrics() {
             cursor: pointer;
             font-family: 'DM Sans', sans-serif;
             transition: background 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
           }
-
-          .mx-btn-danger:hover {
-            background: #dc2626;
-          }
-
-          .mx-btn-danger:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-          }
+          .mx-btn-danger:hover { background: #dc2626; }
+          .mx-btn-danger:disabled { opacity: 0.6; cursor: not-allowed; }
 
           @media (max-width: 768px) {
-            .mx-main {
-              padding: 1.25rem 1rem 2rem;
-            }
-
-            .mx-page-header {
-              flex-direction: column;
-              align-items: stretch;
-            }
-
-            .mx-form-row {
-              grid-template-columns: 1fr;
-            }
+            .mx-main { padding: 1.25rem 1rem 2rem; }
+            .mx-page-header { flex-direction: column; align-items: stretch; }
+            .mx-form-row { grid-template-columns: 1fr; }
           }
         `}</style>
 
         <main className="mx-main">
+          {/* Page header */}
           <div className="mx-page-header">
             <div>
               <h1 className="mx-page-title">
-                Métricas
+                Metrics
                 <span className="mx-count-pill">
-                  {tab === "metrics" ? metrics.length : types.length} registradas
+                  {tab === "metrics" ? metrics.length : types.length} registered
                 </span>
               </h1>
-              <p className="mx-page-sub">
-                Monitoreo y tipos de métricas de dispositivos
-              </p>
+              <p className="mx-page-sub">Device metric monitoring and types</p>
             </div>
 
             <button
               className="mx-btn-primary"
-              onClick={() =>
-                tab === "metrics"
-                  ? setShowMetricModal(true)
-                  : setShowTypeModal(true)
-              }
-              disabled={
-                tab === "metrics"
-                  ? !permissions?.canEdit
-                  : user.role !== "admin"
-              }
+              onClick={() => tab === "metrics" ? setShowMetricModal(true) : setShowTypeModal(true)}
+              disabled={tab === "metrics" ? !permissions?.canEdit : user.role !== "admin"}
             >
-              + {tab === "metrics" ? "Registrar métrica" : "Nuevo tipo"}
+              <i className="ti ti-plus" aria-hidden="true"></i>
+              {tab === "metrics" ? "Log metric" : "New type"}
             </button>
           </div>
 
+          {/* Tabs */}
           <div className="mx-tabs">
             <button
               className={`mx-tab ${tab === "metrics" ? "active" : ""}`}
-              onClick={() => {
-                setTab("metrics");
-                setSearch("");
-              }}
+              onClick={() => { setTab("metrics"); setSearch(""); }}
             >
-              📊 Métricas <span className="mx-tab-badge">{metrics.length}</span>
+              <i className="ti ti-chart-line" aria-hidden="true"></i>
+              Metrics
+              <span className="mx-tab-badge">{metrics.length}</span>
             </button>
 
             {user.role !== "user" && (
               <button
                 className={`mx-tab ${tab === "types" ? "active" : ""}`}
-                onClick={() => {
-                  setTab("types");
-                  setSearch("");
-                }}
+                onClick={() => { setTab("types"); setSearch(""); }}
               >
-                🏷️ Tipos <span className="mx-tab-badge">{types.length}</span>
+                <i className="ti ti-tag" aria-hidden="true"></i>
+                Types
+                <span className="mx-tab-badge">{types.length}</span>
               </button>
             )}
           </div>
 
+          {/* Toolbar */}
           <div className="mx-toolbar">
             <div className="mx-toolbar-left">
               <div className="mx-search-wrap">
-                <span style={{ color: "#94a3b8", fontSize: 14 }}>🔍</span>
+                <span className="mx-search-icon">
+                  <i className="ti ti-search" aria-hidden="true"></i>
+                </span>
                 <input
                   className="mx-search-input"
-                  placeholder={
-                    tab === "metrics"
-                      ? "Buscar por dispositivo, tipo o valor…"
-                      : "Buscar por nombre o unidad…"
-                  }
+                  placeholder={tab === "metrics" ? "Search by device, type or value…" : "Search by name or unit…"}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
                 {search && (
-                  <button
-                    className="mx-search-clear"
-                    onClick={() => setSearch("")}
-                  >
-                    ✕
+                  <button className="mx-search-clear" onClick={() => setSearch("")} aria-label="Clear search">
+                    <i className="ti ti-x" aria-hidden="true"></i>
                   </button>
                 )}
               </div>
@@ -978,51 +808,51 @@ export default function Metrics() {
                 <>
                   <input
                     className="mx-filter-input"
-                    placeholder="ID Dispositivo"
+                    placeholder="Device ID"
                     value={filterDeviceId}
                     onChange={(e) => setFilterDeviceId(e.target.value)}
                   />
-
                   <input
                     className="mx-filter-input"
-                    placeholder="ID Tipo métrica"
+                    placeholder="Metric type ID"
                     value={filterTypeId}
                     onChange={(e) => setFilterTypeId(e.target.value)}
                   />
-
                   <button className="mx-btn-filter" onClick={fetchMetrics}>
-                    Filtrar
+                    <i className="ti ti-filter" aria-hidden="true"></i>
+                    Filter
                   </button>
                 </>
               )}
             </div>
           </div>
 
+          {/* Metrics table */}
           {tab === "metrics" && (
             <div className="mx-card">
               {metricsLoading ? (
                 <div className="mx-state">
                   <div className="mx-spinner" />
-                  <p className="mx-state-sub">Cargando métricas…</p>
+                  <p className="mx-state-sub">Loading metrics…</p>
                 </div>
               ) : metricsError ? (
                 <div className="mx-error-box">
-                  <span>⚠ {metricsError}</span>
+                  <span className="mx-error-inner">
+                    <i className="ti ti-alert-triangle" aria-hidden="true"></i>
+                    {metricsError}
+                  </span>
                   <button className="mx-retry" onClick={fetchMetrics}>
-                    Reintentar
+                    <i className="ti ti-refresh" aria-hidden="true"></i>
+                    Retry
                   </button>
                 </div>
               ) : filteredMetrics.length === 0 ? (
                 <div className="mx-state">
-                  <div className="mx-state-icon">📊</div>
-                  <div className="mx-state-title">
-                    {search ? "Sin resultados" : "No hay métricas"}
+                  <div className="mx-state-icon">
+                    <i className="ti ti-chart-line-off" aria-hidden="true"></i>
                   </div>
-                  <p className="mx-state-sub">
-                    {search
-                      ? "Intenta con otros términos."
-                      : "Registra la primera métrica."}
-                  </p>
+                  <div className="mx-state-title">{search ? "No results found" : "No metrics yet"}</div>
+                  <p className="mx-state-sub">{search ? "Try different search terms." : "Log the first metric."}</p>
                 </div>
               ) : (
                 <div className="mx-table-wrap">
@@ -1030,53 +860,40 @@ export default function Metrics() {
                     <thead>
                       <tr>
                         <th>#</th>
-                        <th>Dispositivo</th>
-                        <th>Tipo</th>
-                        <th>Valor</th>
-                        <th>Registrado</th>
+                        <th>Device</th>
+                        <th>Type</th>
+                        <th>Value</th>
+                        <th>Recorded</th>
                         <th></th>
                       </tr>
                     </thead>
-
                     <tbody>
                       {filteredMetrics.map((m, i) => (
                         <tr key={m.id}>
-                          <td className="mx-td-num">
-                            {String(i + 1).padStart(2, "0")}
-                          </td>
-
+                          <td className="mx-td-num">{String(i + 1).padStart(2, "0")}</td>
                           <td>
                             <span className="mx-device-id">
-                              🖥 {m.device_id}
+                              <i className="ti ti-device-desktop" aria-hidden="true"></i>
+                              {m.device_id}
                             </span>
                           </td>
-
                           <td>
                             <span className="mx-type-chip">
-                              📌 {m.metric_type || getTypeName(m.metric_type_id)}
+                              <i className="ti ti-tag" aria-hidden="true"></i>
+                              {m.metric_type || getTypeName(m.metric_type_id)}
                             </span>
                           </td>
-
                           <td>
                             <span className="mx-value-chip">
                               {m.value}
-                              {m.unit && (
-                                <span className="mx-value-unit">{m.unit}</span>
-                              )}
+                              {m.unit && <span className="mx-value-unit">{m.unit}</span>}
                             </span>
                           </td>
-
-                          <td className="mx-td-date">
-                            {formatDate(m.recorded_at || m.created_at)}
-                          </td>
-
+                          <td className="mx-td-date">{formatDate(m.recorded_at || m.created_at)}</td>
                           <td className="mx-td-actions">
                             {permissions?.canDelete && (
-                              <button
-                                className="mx-btn-del"
-                                onClick={() => setDeleteMetricTarget(m)}
-                              >
-                                🗑️
+                              <button className="mx-btn-del" onClick={() => setDeleteMetricTarget(m)} title="Delete">
+                                <i className="ti ti-trash" aria-hidden="true"></i>
                               </button>
                             )}
                           </td>
@@ -1089,31 +906,32 @@ export default function Metrics() {
             </div>
           )}
 
+          {/* Types table */}
           {tab === "types" && (
             <div className="mx-card">
               {typesLoading ? (
                 <div className="mx-state">
                   <div className="mx-spinner" />
-                  <p className="mx-state-sub">Cargando tipos…</p>
+                  <p className="mx-state-sub">Loading types…</p>
                 </div>
               ) : typesError ? (
                 <div className="mx-error-box">
-                  <span>⚠ {typesError}</span>
+                  <span className="mx-error-inner">
+                    <i className="ti ti-alert-triangle" aria-hidden="true"></i>
+                    {typesError}
+                  </span>
                   <button className="mx-retry" onClick={fetchTypes}>
-                    Reintentar
+                    <i className="ti ti-refresh" aria-hidden="true"></i>
+                    Retry
                   </button>
                 </div>
               ) : filteredTypes.length === 0 ? (
                 <div className="mx-state">
-                  <div className="mx-state-icon">🏷️</div>
-                  <div className="mx-state-title">
-                    {search ? "Sin resultados" : "No hay tipos de métrica"}
+                  <div className="mx-state-icon">
+                    <i className="ti ti-tag-off" aria-hidden="true"></i>
                   </div>
-                  <p className="mx-state-sub">
-                    {search
-                      ? "Intenta con otros términos."
-                      : "Crea el primer tipo."}
-                  </p>
+                  <div className="mx-state-title">{search ? "No results found" : "No metric types yet"}</div>
+                  <p className="mx-state-sub">{search ? "Try different search terms." : "Create the first type."}</p>
                 </div>
               ) : (
                 <div className="mx-table-wrap">
@@ -1121,48 +939,31 @@ export default function Metrics() {
                     <thead>
                       <tr>
                         <th>#</th>
-                        <th>Nombre</th>
-                        <th>Unidad</th>
-                        <th>Descripción</th>
-                        <th>Creado</th>
+                        <th>Name</th>
+                        <th>Unit</th>
+                        <th>Description</th>
+                        <th>Created</th>
                         <th></th>
                       </tr>
                     </thead>
-
                     <tbody>
                       {filteredTypes.map((t, i) => (
                         <tr key={t.id}>
-                          <td className="mx-td-num">
-                            {String(i + 1).padStart(2, "0")}
-                          </td>
-
+                          <td className="mx-td-num">{String(i + 1).padStart(2, "0")}</td>
                           <td className="mx-td-name">{t.name}</td>
-
                           <td>
-                            {t.unit ? (
-                              <span className="mx-unit-chip">{t.unit}</span>
-                            ) : (
-                              <span style={{ color: "#cbd5e1" }}>—</span>
-                            )}
+                            {t.unit
+                              ? <span className="mx-unit-chip">{t.unit}</span>
+                              : <span style={{ color: "#cbd5e1" }}>—</span>}
                           </td>
-
                           <td style={{ color: "#64748b", maxWidth: 260 }}>
-                            {t.description || (
-                              <span style={{ color: "#cbd5e1" }}>—</span>
-                            )}
+                            {t.description || <span style={{ color: "#cbd5e1" }}>—</span>}
                           </td>
-
-                          <td className="mx-td-date">
-                            {formatDate(t.created_at)}
-                          </td>
-
+                          <td className="mx-td-date">{formatDate(t.created_at)}</td>
                           <td className="mx-td-actions">
                             {user.role === "admin" && (
-                              <button
-                                className="mx-btn-del"
-                                onClick={() => setDeleteTypeTarget(t)}
-                              >
-                                🗑️
+                              <button className="mx-btn-del" onClick={() => setDeleteTypeTarget(t)} title="Delete">
+                                <i className="ti ti-trash" aria-hidden="true"></i>
                               </button>
                             )}
                           </td>
@@ -1176,300 +977,192 @@ export default function Metrics() {
           )}
         </main>
 
+        {/* Log metric modal */}
         {showMetricModal && (
-          <div
-            className="mx-overlay"
-            onClick={() => setShowMetricModal(false)}
-          >
+          <div className="mx-overlay" onClick={() => setShowMetricModal(false)}>
             <div className="mx-modal" onClick={(e) => e.stopPropagation()}>
               <div className="mx-modal-head">
-                <h2 className="mx-modal-title">Registrar métrica</h2>
-                <button
-                  className="mx-modal-close"
-                  onClick={() => setShowMetricModal(false)}
-                >
-                  ✕
+                <h2 className="mx-modal-title">Log metric</h2>
+                <button className="mx-modal-close" onClick={() => setShowMetricModal(false)} aria-label="Close">
+                  <i className="ti ti-x" aria-hidden="true"></i>
                 </button>
               </div>
-
               <div className="mx-modal-body">
                 {metricFormError && (
-                  <p className="mx-form-error">⚠ {metricFormError}</p>
+                  <p className="mx-form-error">
+                    <i className="ti ti-alert-circle" aria-hidden="true"></i>
+                    {metricFormError}
+                  </p>
                 )}
-
                 <label>
-                  ID Dispositivo <span className="mx-req">*</span>
+                  Device ID <span className="mx-req">*</span>
                   <input
                     type="number"
                     value={metricForm.device_id}
-                    onChange={(e) =>
-                      setMetricForm({
-                        ...metricForm,
-                        device_id: e.target.value,
-                      })
-                    }
-                    placeholder="Ej: 1"
+                    onChange={(e) => setMetricForm({ ...metricForm, device_id: e.target.value })}
+                    placeholder="e.g. 1"
                     autoFocus
                   />
                 </label>
-
                 <label>
-                  Tipo de métrica <span className="mx-req">*</span>
+                  Metric type <span className="mx-req">*</span>
                   <select
                     value={metricForm.metric_type_id}
-                    onChange={(e) =>
-                      setMetricForm({
-                        ...metricForm,
-                        metric_type_id: e.target.value,
-                      })
-                    }
+                    onChange={(e) => setMetricForm({ ...metricForm, metric_type_id: e.target.value })}
                   >
-                    <option value="">Seleccionar tipo…</option>
+                    <option value="">Select type…</option>
                     {types.map((t) => (
                       <option key={t.id} value={t.id}>
-                        {t.name}
-                        {t.unit ? ` (${t.unit})` : ""}
+                        {t.name}{t.unit ? ` (${t.unit})` : ""}
                       </option>
                     ))}
                   </select>
                 </label>
-
                 <label>
-                  Valor <span className="mx-req">*</span>
+                  Value <span className="mx-req">*</span>
                   <input
                     type="number"
                     step="any"
                     value={metricForm.value}
-                    onChange={(e) =>
-                      setMetricForm({
-                        ...metricForm,
-                        value: e.target.value,
-                      })
-                    }
-                    placeholder="Ej: 98.6"
+                    onChange={(e) => setMetricForm({ ...metricForm, value: e.target.value })}
+                    placeholder="e.g. 98.6"
                   />
                 </label>
               </div>
-
               <div className="mx-modal-foot">
-                <button
-                  className="mx-btn-cancel"
-                  onClick={() => setShowMetricModal(false)}
-                  disabled={metricSaving}
-                >
-                  Cancelar
+                <button className="mx-btn-cancel" onClick={() => setShowMetricModal(false)} disabled={metricSaving}>
+                  Cancel
                 </button>
-
-                <button
-                  className="mx-btn-primary"
-                  onClick={handleCreateMetric}
-                  disabled={metricSaving}
-                >
-                  {metricSaving ? "Guardando…" : "Registrar"}
+                <button className="mx-btn-primary" onClick={handleCreateMetric} disabled={metricSaving}>
+                  {metricSaving
+                    ? <><i className="ti ti-loader-2" aria-hidden="true"></i> Saving…</>
+                    : <><i className="ti ti-chart-line" aria-hidden="true"></i> Log metric</>}
                 </button>
               </div>
             </div>
           </div>
         )}
 
+        {/* New type modal */}
         {showTypeModal && (
           <div className="mx-overlay" onClick={() => setShowTypeModal(false)}>
             <div className="mx-modal" onClick={(e) => e.stopPropagation()}>
               <div className="mx-modal-head">
-                <h2 className="mx-modal-title">Nuevo tipo de métrica</h2>
-                <button
-                  className="mx-modal-close"
-                  onClick={() => setShowTypeModal(false)}
-                >
-                  ✕
+                <h2 className="mx-modal-title">New metric type</h2>
+                <button className="mx-modal-close" onClick={() => setShowTypeModal(false)} aria-label="Close">
+                  <i className="ti ti-x" aria-hidden="true"></i>
                 </button>
               </div>
-
               <div className="mx-modal-body">
                 {typeFormError && (
-                  <p className="mx-form-error">⚠ {typeFormError}</p>
+                  <p className="mx-form-error">
+                    <i className="ti ti-alert-circle" aria-hidden="true"></i>
+                    {typeFormError}
+                  </p>
                 )}
-
                 <label>
-                  Nombre <span className="mx-req">*</span>
+                  Name <span className="mx-req">*</span>
                   <input
                     type="text"
                     value={typeForm.name}
-                    onChange={(e) =>
-                      setTypeForm({
-                        ...typeForm,
-                        name: e.target.value,
-                      })
-                    }
-                    placeholder="Ej: Temperatura"
+                    onChange={(e) => setTypeForm({ ...typeForm, name: e.target.value })}
+                    placeholder="e.g. Temperature"
                     autoFocus
                   />
                 </label>
-
                 <div className="mx-form-row">
                   <label>
-                    Unidad
+                    Unit
                     <input
                       type="text"
                       value={typeForm.unit}
-                      onChange={(e) =>
-                        setTypeForm({
-                          ...typeForm,
-                          unit: e.target.value,
-                        })
-                      }
-                      placeholder="Ej: °C"
+                      onChange={(e) => setTypeForm({ ...typeForm, unit: e.target.value })}
+                      placeholder="e.g. °C"
                     />
                   </label>
                 </div>
-
                 <label>
-                  Descripción
+                  Description
                   <textarea
                     value={typeForm.description}
-                    onChange={(e) =>
-                      setTypeForm({
-                        ...typeForm,
-                        description: e.target.value,
-                      })
-                    }
-                    placeholder="Descripción opcional…"
+                    onChange={(e) => setTypeForm({ ...typeForm, description: e.target.value })}
+                    placeholder="Optional description…"
                     rows={2}
                   />
                 </label>
               </div>
-
               <div className="mx-modal-foot">
-                <button
-                  className="mx-btn-cancel"
-                  onClick={() => setShowTypeModal(false)}
-                  disabled={typeSaving}
-                >
-                  Cancelar
+                <button className="mx-btn-cancel" onClick={() => setShowTypeModal(false)} disabled={typeSaving}>
+                  Cancel
                 </button>
-
-                <button
-                  className="mx-btn-primary"
-                  onClick={handleCreateType}
-                  disabled={typeSaving}
-                >
-                  {typeSaving ? "Creando…" : "Crear tipo"}
+                <button className="mx-btn-primary" onClick={handleCreateType} disabled={typeSaving}>
+                  {typeSaving
+                    ? <><i className="ti ti-loader-2" aria-hidden="true"></i> Creating…</>
+                    : <><i className="ti ti-tag" aria-hidden="true"></i> Create type</>}
                 </button>
               </div>
             </div>
           </div>
         )}
 
+        {/* Delete metric modal */}
         {deleteMetricTarget && (
-          <div
-            className="mx-overlay"
-            onClick={() => setDeleteMetricTarget(null)}
-          >
-            <div
-              className="mx-modal mx-modal-sm"
-              onClick={(e) => e.stopPropagation()}
-            >
+          <div className="mx-overlay" onClick={() => setDeleteMetricTarget(null)}>
+            <div className="mx-modal mx-modal-sm" onClick={(e) => e.stopPropagation()}>
               <div className="mx-modal-head">
-                <h2 className="mx-modal-title">Eliminar métrica</h2>
-                <button
-                  className="mx-modal-close"
-                  onClick={() => setDeleteMetricTarget(null)}
-                >
-                  ✕
+                <h2 className="mx-modal-title">Delete metric</h2>
+                <button className="mx-modal-close" onClick={() => setDeleteMetricTarget(null)} aria-label="Close">
+                  <i className="ti ti-x" aria-hidden="true"></i>
                 </button>
               </div>
-
               <div className="mx-modal-body">
-                <p
-                  style={{
-                    fontSize: "0.9rem",
-                    color: "#475569",
-                    lineHeight: 1.6,
-                  }}
-                >
-                  ¿Confirmas eliminar la métrica{" "}
+                <p style={{ fontSize: "0.9rem", color: "#475569", lineHeight: 1.6 }}>
+                  Are you sure you want to delete metric{" "}
+                  <strong style={{ color: "#0f172a" }}>#{deleteMetricTarget.id}</strong> with value{" "}
                   <strong style={{ color: "#0f172a" }}>
-                    #{deleteMetricTarget.id}
-                  </strong>{" "}
-                  con valor{" "}
-                  <strong style={{ color: "#0f172a" }}>
-                    {deleteMetricTarget.value}
-                    {deleteMetricTarget.unit
-                      ? ` ${deleteMetricTarget.unit}`
-                      : ""}
-                  </strong>
-                  ? Esta acción no se puede deshacer.
+                    {deleteMetricTarget.value}{deleteMetricTarget.unit ? ` ${deleteMetricTarget.unit}` : ""}
+                  </strong>? This action cannot be undone.
                 </p>
               </div>
-
               <div className="mx-modal-foot">
-                <button
-                  className="mx-btn-cancel"
-                  onClick={() => setDeleteMetricTarget(null)}
-                  disabled={deleting}
-                >
-                  Cancelar
+                <button className="mx-btn-cancel" onClick={() => setDeleteMetricTarget(null)} disabled={deleting}>
+                  Cancel
                 </button>
-
-                <button
-                  className="mx-btn-danger"
-                  onClick={handleDeleteMetric}
-                  disabled={deleting}
-                >
-                  {deleting ? "Eliminando…" : "Sí, eliminar"}
+                <button className="mx-btn-danger" onClick={handleDeleteMetric} disabled={deleting}>
+                  {deleting
+                    ? <><i className="ti ti-loader-2" aria-hidden="true"></i> Deleting…</>
+                    : <><i className="ti ti-trash" aria-hidden="true"></i> Yes, delete</>}
                 </button>
               </div>
             </div>
           </div>
         )}
 
+        {/* Delete type modal */}
         {deleteTypeTarget && (
           <div className="mx-overlay" onClick={() => setDeleteTypeTarget(null)}>
-            <div
-              className="mx-modal mx-modal-sm"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <div className="mx-modal mx-modal-sm" onClick={(e) => e.stopPropagation()}>
               <div className="mx-modal-head">
-                <h2 className="mx-modal-title">Eliminar tipo</h2>
-                <button
-                  className="mx-modal-close"
-                  onClick={() => setDeleteTypeTarget(null)}
-                >
-                  ✕
+                <h2 className="mx-modal-title">Delete type</h2>
+                <button className="mx-modal-close" onClick={() => setDeleteTypeTarget(null)} aria-label="Close">
+                  <i className="ti ti-x" aria-hidden="true"></i>
                 </button>
               </div>
-
               <div className="mx-modal-body">
-                <p
-                  style={{
-                    fontSize: "0.9rem",
-                    color: "#475569",
-                    lineHeight: 1.6,
-                  }}
-                >
-                  ¿Confirmas eliminar el tipo{" "}
-                  <strong style={{ color: "#0f172a" }}>
-                    {deleteTypeTarget.name}
-                  </strong>
-                  ? Esto puede afectar métricas existentes asociadas.
+                <p style={{ fontSize: "0.9rem", color: "#475569", lineHeight: 1.6 }}>
+                  Are you sure you want to delete type{" "}
+                  <strong style={{ color: "#0f172a" }}>{deleteTypeTarget.name}</strong>?
+                  This may affect existing metrics associated with it.
                 </p>
               </div>
-
               <div className="mx-modal-foot">
-                <button
-                  className="mx-btn-cancel"
-                  onClick={() => setDeleteTypeTarget(null)}
-                  disabled={deleting}
-                >
-                  Cancelar
+                <button className="mx-btn-cancel" onClick={() => setDeleteTypeTarget(null)} disabled={deleting}>
+                  Cancel
                 </button>
-
-                <button
-                  className="mx-btn-danger"
-                  onClick={handleDeleteType}
-                  disabled={deleting}
-                >
-                  {deleting ? "Eliminando…" : "Sí, eliminar"}
+                <button className="mx-btn-danger" onClick={handleDeleteType} disabled={deleting}>
+                  {deleting
+                    ? <><i className="ti ti-loader-2" aria-hidden="true"></i> Deleting…</>
+                    : <><i className="ti ti-trash" aria-hidden="true"></i> Yes, delete</>}
                 </button>
               </div>
             </div>

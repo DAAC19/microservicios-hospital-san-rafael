@@ -27,12 +27,12 @@ const NAV_LINKS: Array<{
   visible: (permissions: RolePermissions) => boolean;
 }> = [
   { key: "dashboard", label: "Dashboard", path: "/dashboard", visible: () => true },
-  { key: "devices", label: "Dispositivos", path: "/devices", visible: () => true },
-  { key: "locations", label: "Ubicaciones", path: "/locations", visible: (perm) => perm.canViewAll },
-  { key: "metrics", label: "Métricas", path: "/metrics", visible: (perm) => perm.canViewAll },
-  { key: "alerts", label: "Alertas", path: "/alerts", visible: (perm) => perm.canViewAlerts },
-  { key: "reports", label: "Reportes", path: "/reports", visible: (perm) => perm.canViewReports },
-  { key: "users", label: "Usuarios", path: "/users", visible: (perm) => perm.canManageUsers },
+  { key: "devices", label: "Devices", path: "/devices", visible: () => true },
+  { key: "locations", label: "Locations", path: "/locations", visible: (perm) => perm.canViewAll },
+  { key: "metrics", label: "Metrics", path: "/metrics", visible: (perm) => perm.canViewAll },
+  { key: "alerts", label: "Alerts", path: "/alerts", visible: (perm) => perm.canViewAlerts },
+  { key: "reports", label: "Reports", path: "/reports", visible: (perm) => perm.canViewReports },
+  { key: "users", label: "Users", path: "/users", visible: (perm) => perm.canManageUsers },
 ];
 
 const Navbar = ({ user, permissions, activePage, onLogout }: NavbarProps) => {
@@ -57,7 +57,7 @@ const Navbar = ({ user, permissions, activePage, onLogout }: NavbarProps) => {
       justifyContent: "space-between",
       height: 60,
       borderBottom: "1px solid rgba(255,255,255,0.06)",
-    },
+    }as const,
     brand: {
       display: "flex",
       alignItems: "center",
@@ -196,10 +196,10 @@ const Navbar = ({ user, permissions, activePage, onLogout }: NavbarProps) => {
           </div>
         </div>
 
-        <button type="button" style={styles.ghostButton} onClick={() => navigate("/profile")}>Perfil</button>
+        <button type="button" style={styles.ghostButton} onClick={() => navigate("/profile")}>Profile</button>
         <button type="button" style={styles.ghostButton} onClick={() => navigate("/")}>Home</button>
         <button type="button" style={styles.ghostButton} onClick={onLogout}>
-          Cerrar sesión
+          Log out
         </button>
       </div>
     </nav>

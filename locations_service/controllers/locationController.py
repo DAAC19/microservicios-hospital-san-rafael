@@ -10,7 +10,7 @@ def get_location_by_id(location_id):
     location = Location.query.get(location_id)
 
     if not location:
-        return {"message": "location not found"}, 404
+        return {"message": "Location not found"}, 404
     
     return serialize_location(location), 200
 

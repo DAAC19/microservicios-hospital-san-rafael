@@ -17,7 +17,7 @@ def create_patient_route():
     data = request.get_json()
     
     if not data:
-        return jsonify({"error": "Datos JSON requeridos"}), 400
+        return jsonify({"error": "Required JSON data"}), 400
     
     return jsonify(create_user(data))
 
@@ -26,7 +26,7 @@ def update_patient_route(user_id):
     data = request.get_json()
     
     if not data:
-        return jsonify({"error": "Datos JSON requeridos"}), 400
+        return jsonify({"error": "Required JSON data"}), 400
     
     return jsonify(update_user(user_id, data))
 

@@ -43,35 +43,35 @@ const getFriendlyErrorMessage = (error: unknown) => {
   if (axiosError?.isAxiosError) {
     const status = axiosError.response?.status;
     if (status === 401) {
-      return "No autorizado. Por favor inicia sesión de nuevo.";
+      return "Unauthorized. Please log in again.";
     }
     if (status === 403) {
-      return "No tienes permiso para acceder a este reporte.";
+      return "You do not have permission to access this report.";
     }
     if (status === 404) {
-      return "No se encontró el reporte solicitado. Verifica el tipo de reporte.";
+      return "The requested report was not found. Please verify the report type.";
     }
     if (status === 500) {
-      return "El servidor de reportes encontró un error. Intenta de nuevo más tarde.";
+      return "The reports server encountered an error. Please try again later.";
     }
     if (!axiosError.response) {
-      return "No se pudo conectar con el servidor de reportes. Verifica tu red.";
+      return "Could not connect to the reports server. Please check your network connection.";
     }
-    return axiosError.response.statusText || "Ocurrió un error en el gateway de reportes.";
+    return axiosError.response.statusText || "An error occurred in the reports gateway.";
   }
 
   if (error instanceof Error) {
     const lower = error.message.toLowerCase();
     if (lower.includes("timeout")) {
-      return "La solicitud tardó demasiado. Intenta de nuevo más tarde.";
+      return "The request took too long. Please try again later.";
     }
     if (lower.includes("network")) {
-      return "No se pudo conectar con el servidor de reportes. Verifica tu conexión.";
+      return "Could not connect to the reports server. Please check your network connection.";
     }
     return error.message;
   }
 
-  return "Ocurrió un error inesperado al obtener el reporte.";
+  return "An unexpected error occurred while fetching the report.";
 };
 
 /**
@@ -93,13 +93,13 @@ export const getReports = async (
     const isEmptyArray = Array.isArray(data) && data.length === 0;
 
     if (data == null || isEmptyObject || isEmptyArray) {
-      throw new Error("No se encontraron datos para el reporte solicitado.");
+      throw new Error("No data found for the requested report.");
     }
 
     return data;
   } catch (error) {
     const message = getFriendlyErrorMessage(error);
-    throw new Error(`No se pudo cargar el reporte. ${message}`, { cause: error });
+    throw new Error(`Failed to load the report. ${message}`, { cause: error });
   }
 };
 
@@ -127,7 +127,7 @@ export const downloadReport = async (
     const blob = new Blob([response.data], { type: contentType });
 
     if (!blob.size) {
-      throw new Error("El reporte descargado está vacío.");
+      throw new Error("The downloaded report is empty.");
     }
 
     const urlObject = window.URL.createObjectURL(blob);
@@ -140,6 +140,6 @@ export const downloadReport = async (
     window.URL.revokeObjectURL(urlObject);
   } catch (error) {
     const message = getFriendlyErrorMessage(error);
-    throw new Error(`No se pudo descargar el reporte. ${message}`, { cause: error });
+    throw new Error(`Failed to download the report. ${message}`, { cause: error });
   }
 };

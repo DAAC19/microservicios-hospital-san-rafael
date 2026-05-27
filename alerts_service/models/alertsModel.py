@@ -19,10 +19,7 @@ class AlertSeverity(db.Model):
 
 
 class Alert(db.Model):
-    """
-    Alertas generadas por el sistema de monitoreo.
-    Cada alerta está asociada a un dispositivo y tiene un nivel de severidad.
-    """
+
     __tablename__ = "alerts"
 
     id          = db.Column(db.Integer, primary_key=True)

@@ -13,7 +13,7 @@ def create_metric_type_route():
     data = request.get_json()
 
     if not data:
-        return jsonify({"error": "Datos JSON requeridos"}), 400
+        return jsonify({"error": "Required JSON data"}), 400
 
     result, status = create_metric_type(data)
     return jsonify(result), status
@@ -40,7 +40,7 @@ def create_metric_route():
     data = request.get_json()
 
     if not data:
-        return jsonify({"error": "Datos JSON requeridos"}), 400
+        return jsonify({"error": "Required JSON data"}), 400
 
     result, status = create_metric(data)
     return jsonify(result), status

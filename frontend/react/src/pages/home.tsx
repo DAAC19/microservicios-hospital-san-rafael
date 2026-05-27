@@ -3,8 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 function Home() {
   const [scrolled, setScrolled] = useState(false);
-
-const navigate = useNavigate();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -17,7 +16,8 @@ const navigate = useNavigate();
   return (
     <div style={{ background: "#ffffff" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Poppins:wght@600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,700;0,800;1,700&display=swap');
+        @import url('https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css');
 
         :root {
           --primary: #0d6efd;
@@ -30,7 +30,7 @@ const navigate = useNavigate();
         }
 
         * {
-          font-family: 'Sora', sans-serif;
+          font-family: 'DM Sans', sans-serif;
         }
 
         html {
@@ -38,27 +38,27 @@ const navigate = useNavigate();
         }
 
         .navbar-custom {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 1000;
-        padding: 1rem 4rem;
-        background: linear-gradient(135deg, #063b8f 0%, #052f73 55%, #03265c 100%);
-        backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-        box-shadow: 0 10px 35px rgba(3, 38, 92, 0.22);
-        transition: all 0.3s ease;
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 1000;
+          padding: 1rem 4rem;
+          background: linear-gradient(135deg, #063b8f 0%, #052f73 55%, #03265c 100%);
+          backdrop-filter: blur(12px);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+          box-shadow: 0 10px 35px rgba(3, 38, 92, 0.22);
+          transition: all 0.3s ease;
         }
 
         .navbar-custom.scrolled {
-        padding: 0.75rem 4rem;
-        background: linear-gradient(135deg, #042b68 0%, #03245a 55%, #021a42 100%);
-        box-shadow: 0 14px 42px rgba(2, 26, 66, 0.32);
+          padding: 0.75rem 4rem;
+          background: linear-gradient(135deg, #042b68 0%, #03245a 55%, #021a42 100%);
+          box-shadow: 0 14px 42px rgba(2, 26, 66, 0.32);
         }
 
         .navbar-brand {
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Fraunces', serif;
           font-size: 1.5rem;
           font-weight: 700;
           background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
@@ -116,36 +116,18 @@ const navigate = useNavigate();
         }
 
         @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes slideLeft {
-          from {
-            opacity: 0;
-            transform: translateX(-50px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
+          from { opacity: 0; transform: translateX(-50px); }
+          to { opacity: 1; transform: translateX(0); }
         }
 
         @keyframes slideRight {
-          from {
-            opacity: 0;
-            transform: translateX(50px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
+          from { opacity: 0; transform: translateX(50px); }
+          to { opacity: 1; transform: translateX(0); }
         }
 
         .hero-content {
@@ -155,7 +137,9 @@ const navigate = useNavigate();
         }
 
         .hero-badge {
-          display: inline-block;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
           background: rgba(255, 255, 255, 0.15);
           border: 1px solid rgba(255, 255, 255, 0.3);
           color: white;
@@ -169,7 +153,7 @@ const navigate = useNavigate();
         }
 
         .hero-title {
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Fraunces', serif;
           font-size: 3.5rem;
           font-weight: 800;
           line-height: 1.1;
@@ -206,7 +190,10 @@ const navigate = useNavigate();
           transition: all 0.3s ease;
           box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
           text-decoration: none;
-          display: inline-block;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-family: 'DM Sans', sans-serif;
         }
 
         .btn-primary-custom:hover {
@@ -225,7 +212,10 @@ const navigate = useNavigate();
           cursor: pointer;
           transition: all 0.3s ease;
           text-decoration: none;
-          display: inline-block;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-family: 'DM Sans', sans-serif;
         }
 
         .btn-secondary-custom:hover {
@@ -281,10 +271,11 @@ const navigate = useNavigate();
           margin-bottom: 0.5rem;
           text-transform: uppercase;
           letter-spacing: 0.5px;
+          font-family: 'DM Mono', monospace;
         }
 
         .stat-value {
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Fraunces', serif;
           font-size: 2rem;
           font-weight: 800;
           color: var(--dark);
@@ -298,7 +289,9 @@ const navigate = useNavigate();
         }
 
         .section-badge {
-          display: inline-block;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
           background: var(--primary);
           background: linear-gradient(135deg, var(--primary), var(--primary-dark));
           color: white;
@@ -309,10 +302,11 @@ const navigate = useNavigate();
           margin-bottom: 1.5rem;
           text-transform: uppercase;
           letter-spacing: 0.5px;
+          font-family: 'DM Mono', monospace;
         }
 
         .section-title {
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Fraunces', serif;
           font-size: 2.8rem;
           font-weight: 800;
           color: var(--dark);
@@ -375,6 +369,7 @@ const navigate = useNavigate();
           align-items: center;
           justify-content: center;
           font-size: 1.8rem;
+          color: white;
           margin-bottom: 1.5rem;
           transition: transform 0.3s ease;
         }
@@ -384,7 +379,7 @@ const navigate = useNavigate();
         }
 
         .module-title {
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Fraunces', serif;
           font-size: 1.25rem;
           font-weight: 700;
           color: var(--dark);
@@ -425,12 +420,13 @@ const navigate = useNavigate();
         }
 
         .feature-icon {
-          font-size: 2.5rem;
+          font-size: 2.2rem;
+          color: var(--primary);
           margin-bottom: 1rem;
         }
 
         .feature-title {
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Fraunces', serif;
           font-size: 1.15rem;
           font-weight: 700;
           color: var(--dark);
@@ -463,7 +459,7 @@ const navigate = useNavigate();
         }
 
         .footer-brand {
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Fraunces', serif;
           font-weight: 700;
           font-size: 1.1rem;
         }
@@ -472,53 +468,39 @@ const navigate = useNavigate();
           color: #9ca3af;
           font-size: 0.95rem;
           margin-top: 0.5rem;
+          font-family: 'DM Mono', monospace;
         }
 
         @media (max-width: 768px) {
-          .hero-title {
-            font-size: 2.5rem;
-          }
-
-          .section-title {
-            font-size: 2rem;
-          }
-
-          .hero-buttons {
-            flex-direction: column;
-          }
-
-          .btn-primary-custom,
-          .btn-secondary-custom {
-            width: 100%;
-            text-align: center;
-          }
-
-          .modules-section {
-            padding: 3rem 1.5rem;
-          }
-
-          .features-section {
-            padding: 3rem 1.5rem;
-          }
+          .hero-title { font-size: 2.5rem; }
+          .section-title { font-size: 2rem; }
+          .hero-buttons { flex-direction: column; }
+          .btn-primary-custom, .btn-secondary-custom { width: 100%; text-align: center; justify-content: center; }
+          .modules-section { padding: 3rem 1.5rem; }
+          .features-section { padding: 3rem 1.5rem; }
         }
       `}</style>
 
       {/* Navbar */}
-      <nav className={`navbar-custom fixed-top ${scrolled ? "scrolled" : ""}`} style={{
-            top: 0,
-            left: 0,
-            right: 0,
-            padding: scrolled ? "0.75rem 2.5rem" : "1rem 2.5rem",
-            zIndex: 1000,
-        }}>
+      <nav
+        className={`navbar-custom fixed-top ${scrolled ? "scrolled" : ""}`}
+        style={{
+          top: 0,
+          left: 0,
+          right: 0,
+          padding: scrolled ? "0.75rem 2.5rem" : "1rem 2.5rem",
+          zIndex: 1000,
+        }}
+      >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span className="navbar-brand">Hospital San Rafael</span>
+          <span className="navbar-brand">San Rafael Hospital</span>
           <button
             className="btn-primary-custom"
             onClick={() => navigate("/login")}
             style={{ padding: "0.75rem 2rem", fontSize: "0.95rem" }}
           >
-            Iniciar sesión
+            <i className="ti ti-login" aria-hidden="true"></i>
+            Sign in
           </button>
         </div>
       </nav>
@@ -530,23 +512,28 @@ const navigate = useNavigate();
           <div className="hero-circle-2"></div>
         </div>
 
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "2.5rem", width: "100%", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "3rem", alignItems: "center" }}>
+        <div style={{
+          maxWidth: "1200px", margin: "0 auto", padding: "2.5rem", width: "100%",
+          display: "grid", gridTemplateColumns: "1fr 1fr", gap: "3rem", alignItems: "center"
+        }}>
           {/* Content */}
           <div className="hero-content">
-            <div className="hero-badge">🚀 Sistema de monitoreo hospitalario</div>
-            <h1 className="hero-title">Gestión inteligente de dispositivos médicos</h1>
+            <div className="hero-badge">
+              <i className="ti ti-activity-heartbeat" aria-hidden="true"></i>
+              Hospital monitoring system
+            </div>
+            <h1 className="hero-title">Intelligent medical device management</h1>
             <p className="hero-description">
-              Plataforma centralizada para supervisar dispositivos, ubicaciones, métricas, alertas y reportes del Hospital San Rafael mediante una arquitectura moderna basada en microservicios.
+              Centralized platform for monitoring devices, locations, metrics, alerts, and reports at San Rafael Hospital through a modern microservices-based architecture.
             </p>
             <div className="hero-buttons">
-              <button
-                className="btn-primary-custom"
-                onClick={() => navigate("/login")}
-              >
-                Acceder al sistema
+              <button className="btn-primary-custom" onClick={() => navigate("/login")}>
+                <i className="ti ti-layout-dashboard" aria-hidden="true"></i>
+                Access system
               </button>
-              <a href="#modulos" className="btn-secondary-custom">
-                Ver módulos
+              <a href="#modules" className="btn-secondary-custom">
+                <i className="ti ti-apps" aria-hidden="true"></i>
+                View modules
               </a>
             </div>
           </div>
@@ -554,86 +541,98 @@ const navigate = useNavigate();
           {/* Card */}
           <div className="hero-card">
             <div style={{ marginBottom: "1.5rem" }}>
-              <h3 style={{ fontSize: "1.4rem", fontWeight: "700", color: "var(--dark)", margin: 0, marginBottom: "0.5rem" }}>
-                Estado general del sistema
+              <h3 style={{ fontSize: "1.4rem", fontWeight: "700", color: "var(--dark)", margin: 0, marginBottom: "0.5rem", fontFamily: "'Fraunces', serif" }}>
+                Overall system status
               </h3>
-              <p style={{ color: "#9ca3af", margin: 0, fontSize: "0.95rem" }}>Resumen operativo en tiempo real</p>
+              <p style={{ color: "#9ca3af", margin: 0, fontSize: "0.95rem", fontFamily: "'DM Mono', monospace" }}>Real-time operational summary</p>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-              <div></div>
-              <span style={{ background: "#10b981", color: "white", padding: "0.5rem 1rem", borderRadius: "50px", fontSize: "0.85rem", fontWeight: "700" }}>
-                ✓ Activo
+            <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: "1.5rem" }}>
+              <span style={{ background: "#10b981", color: "white", padding: "0.5rem 1rem", borderRadius: "50px", fontSize: "0.85rem", fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
+                <i className="ti ti-circle-check" aria-hidden="true"></i>
+                Active
               </span>
             </div>
 
             <div className="stat-grid">
               <div className="stat-item">
-                <div className="stat-label">Dispositivos</div>
+                <div className="stat-label">Devices</div>
                 <div className="stat-value">24</div>
               </div>
               <div className="stat-item">
-                <div className="stat-label">Ubicaciones</div>
+                <div className="stat-label">Locations</div>
                 <div className="stat-value">8</div>
               </div>
               <div className="stat-item">
-                <div className="stat-label">Alertas</div>
+                <div className="stat-label">Alerts</div>
                 <div className="stat-value" style={{ color: "#f59e0b" }}>3</div>
               </div>
               <div className="stat-item">
-                <div className="stat-label">Reportes</div>
+                <div className="stat-label">Reports</div>
                 <div className="stat-value">12</div>
               </div>
             </div>
 
-            <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#1e40af", padding: "1.5rem", borderRadius: "12px", fontSize: "0.95rem", lineHeight: "1.6" }}>
-              <strong>Monitoreo centralizado:</strong> consulta información operativa desde un único panel de administración.
+            <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#1e40af", padding: "1.5rem", borderRadius: "12px", fontSize: "0.95rem", lineHeight: "1.6", display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
+              <i className="ti ti-info-circle" style={{ fontSize: "1.1rem", marginTop: "2px", flexShrink: 0 }} aria-hidden="true"></i>
+              <span><strong>Centralized monitoring:</strong> access operational data from a single administration panel.</span>
             </div>
           </div>
         </div>
       </section>
 
       {/* Modules Section */}
-      <section id="modulos" className="modules-section">
+      <section id="modules" className="modules-section">
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <div style={{ marginBottom: "3rem" }}>
-            <span className="section-badge">Módulos principales</span>
-            <h2 className="section-title">Control hospitalario organizado por servicios</h2>
+            <span className="section-badge">
+              <i className="ti ti-layout-grid" aria-hidden="true"></i>
+              Main modules
+            </span>
+            <h2 className="section-title">Hospital control organized by services</h2>
             <p className="section-description">
-              La plataforma separa las responsabilidades del sistema en módulos independientes, facilitando el mantenimiento, la escalabilidad y la integración con nuevos componentes.
+              The platform separates system responsibilities into independent modules, making maintenance, scalability, and integration with new components easier.
             </p>
           </div>
 
           <div className="modules-grid">
             <div className="module-card">
-              <div className="module-icon">🩺</div>
-              <h3 className="module-title">Dispositivos</h3>
+              <div className="module-icon">
+                <i className="ti ti-stethoscope" aria-hidden="true"></i>
+              </div>
+              <h3 className="module-title">Devices</h3>
               <p className="module-description">
-                Registro, consulta y control del estado de los equipos médicos del hospital.
+                Registration, lookup, and status control of hospital medical equipment.
               </p>
             </div>
 
             <div className="module-card">
-              <div className="module-icon">📍</div>
-              <h3 className="module-title">Ubicaciones</h3>
+              <div className="module-icon">
+                <i className="ti ti-map-pin" aria-hidden="true"></i>
+              </div>
+              <h3 className="module-title">Locations</h3>
               <p className="module-description">
-                Organización de áreas, salas y espacios donde se encuentran los dispositivos.
+                Organization of areas, rooms, and spaces where devices are located.
               </p>
             </div>
 
             <div className="module-card">
-              <div className="module-icon">⚠️</div>
-              <h3 className="module-title">Alertas</h3>
+              <div className="module-icon">
+                <i className="ti ti-bell-ringing" aria-hidden="true"></i>
+              </div>
+              <h3 className="module-title">Alerts</h3>
               <p className="module-description">
-                Notificaciones para eventos importantes o condiciones que requieren atención.
+                Notifications for important events or conditions that require attention.
               </p>
             </div>
 
             <div className="module-card">
-              <div className="module-icon">📊</div>
-              <h3 className="module-title">Reportes</h3>
+              <div className="module-icon">
+                <i className="ti ti-chart-bar" aria-hidden="true"></i>
+              </div>
+              <h3 className="module-title">Reports</h3>
               <p className="module-description">
-                Visualización consolidada de información para apoyar la toma de decisiones.
+                Consolidated information views to support decision-making.
               </p>
             </div>
           </div>
@@ -645,26 +644,32 @@ const navigate = useNavigate();
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <div className="features-grid">
             <div className="feature-card">
-              <div className="feature-icon">🏗️</div>
-              <h3 className="feature-title">Microservicios</h3>
+              <div className="feature-icon">
+                <i className="ti ti-building-community" aria-hidden="true"></i>
+              </div>
+              <h3 className="feature-title">Microservices</h3>
               <p className="feature-description">
-                Arquitectura modular, escalable y fácil de mantener.
+                Modular, scalable, and easy-to-maintain architecture.
               </p>
             </div>
 
             <div className="feature-card">
-              <div className="feature-icon">🔌</div>
-              <h3 className="feature-title">API REST</h3>
+              <div className="feature-icon">
+                <i className="ti ti-plug-connected" aria-hidden="true"></i>
+              </div>
+              <h3 className="feature-title">REST API</h3>
               <p className="feature-description">
-                Comunicación clara entre frontend, gateway y servicios.
+                Clear communication between frontend, gateway, and services.
               </p>
             </div>
 
             <div className="feature-card">
-              <div className="feature-icon">📈</div>
+              <div className="feature-icon">
+                <i className="ti ti-layout-dashboard" aria-hidden="true"></i>
+              </div>
               <h3 className="feature-title">Dashboard</h3>
               <p className="feature-description">
-                Panel central para supervisar la operación del sistema.
+                Central panel for supervising system operations.
               </p>
             </div>
           </div>
@@ -675,17 +680,16 @@ const navigate = useNavigate();
       <footer className="footer">
         <div className="footer-content">
           <div>
-            <p className="footer-text footer-brand">Hospital San Rafael</p>
-            <p className="footer-text footer-subtitle">
-              Sistema de gestión y monitoreo hospitalario
-            </p>
+            <p className="footer-text footer-brand">San Rafael Hospital</p>
+            <p className="footer-text footer-subtitle">Hospital management and monitoring system</p>
           </div>
           <button
             className="btn-primary-custom"
             onClick={() => navigate("/login")}
             style={{ padding: "0.75rem 2rem", fontSize: "0.95rem" }}
           >
-            Acceder al sistema
+            <i className="ti ti-login" aria-hidden="true"></i>
+            Access system
           </button>
         </div>
       </footer>

@@ -63,7 +63,7 @@ export const roleInfo: Record<
   }
 > = {
   admin: {
-    label: "Administrador",
+    label: "Administrator",
     color: "#ef4444",
     icon: "👨‍💼",
   },
@@ -75,7 +75,7 @@ export const roleInfo: Record<
   },
 
   technician: {
-    label: "Técnico",
+    label: "technical",
     color: "#3b82f6",
     icon: "🔧",
   },

@@ -11,7 +11,7 @@ def token_required(f):
         auth_header = request.headers.get("Authorization")
 
         if not auth_header:
-            return jsonify({"message": "Token requerido"}), 401
+            return jsonify({"message": "Token required"}), 401
 
         try:
             token = auth_header.split(" ")[1]
@@ -27,13 +27,13 @@ def token_required(f):
             request.user_role = decoded.get("role")
 
         except jwt.ExpiredSignatureError:
-            return jsonify({"message": "Token expirado"}), 401
+            return jsonify({"message": "Token expired"}), 401
 
         except jwt.InvalidTokenError:
-            return jsonify({"message": "Token inválido"}), 401
+            return jsonify({"message": "Invalid token"}), 401
 
         except Exception:
-            return jsonify({"message": "Error en el token"}), 401
+            return jsonify({"message": "Error in token"}), 401
 
         return f(*args, **kwargs)
 
@@ -48,9 +48,9 @@ def roles_required(*allowed_roles):
 
             if user_role not in allowed_roles:
                 return jsonify({
-                    "message": "No tienes permisos para realizar esta acción",
-                    "rol_usuario": user_role,
-                    "roles_permitidos": allowed_roles
+                    "message": "You do not have permissions to perform this action",
+                    "user_role": user_role,
+                    "allowed_roles": allowed_roles
                 }), 403
 
             return f(*args, **kwargs)

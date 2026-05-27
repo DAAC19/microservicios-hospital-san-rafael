@@ -32,7 +32,7 @@ function MetricsCharts({ metrics, metricTypes }: { metrics: Metric[]; metricType
 
     const grouped: Record<string, { values: number[]; unit: string }> = {};
     metrics.forEach((metric) => {
-      const fallbackName = `Tipo ${metric.metric_type_id}`;
+      const fallbackName = `Type ${metric.metric_type_id}`;
       const key = metric.metric_type || typeNames.get(String(metric.metric_type_id)) || fallbackName;
       if (!grouped[key]) {
         grouped[key] = { values: [], unit: metric.unit || "" };
@@ -60,7 +60,7 @@ function MetricsCharts({ metrics, metricTypes }: { metrics: Metric[]; metricType
         data: {
           labels: [],
           datasets: [{
-            label: "Promedio",
+            label: "Average",
             data: [],
             backgroundColor: [],
             borderColor: [],
@@ -112,16 +112,16 @@ function MetricsCharts({ metrics, metricTypes }: { metrics: Metric[]; metricType
     const chart = lineChart.current;
     chart.data.labels = lineLabels;
     chart.data.datasets = types.slice(0, 4).map((type, index) => ({
-            label: type,
-            data: grouped[type].values,
-            borderColor: CHART_COLORS[index % CHART_COLORS.length],
-            backgroundColor: "transparent",
-            tension: 0.4,
-            pointRadius: 4,
-            pointBackgroundColor: CHART_COLORS[index % CHART_COLORS.length],
-            borderWidth: 2,
-            borderDash: index === 1 ? [5, 3] : index === 2 ? [2, 2] : [],
-          }));
+      label: type,
+      data: grouped[type].values,
+      borderColor: CHART_COLORS[index % CHART_COLORS.length],
+      backgroundColor: "transparent",
+      tension: 0.4,
+      pointRadius: 4,
+      pointBackgroundColor: CHART_COLORS[index % CHART_COLORS.length],
+      borderWidth: 2,
+      borderDash: index === 1 ? [5, 3] : index === 2 ? [2, 2] : [],
+    }));
     chart.update();
   }, [types, grouped, lineLabels]);
 
@@ -140,8 +140,8 @@ function MetricsCharts({ metrics, metricTypes }: { metrics: Metric[]; metricType
     <div className="db-card" style={{ marginTop: "1.75rem" }}>
       <div className="db-card-head">
         <div>
-          <div className="db-card-title">Métricas del sistema</div>
-          <div className="db-card-sub">Últimas lecturas por tipo de métrica</div>
+          <div className="db-card-title">System metrics</div>
+          <div className="db-card-sub">Latest readings by metric type</div>
         </div>
       </div>
       <div style={{ padding: "1.25rem" }}>
@@ -156,7 +156,7 @@ function MetricsCharts({ metrics, metricTypes }: { metrics: Metric[]; metricType
                   {avg}
                   <span style={{ fontSize: 12, color: "#94a3b8", marginLeft: 4 }}>{grouped[t].unit}</span>
                 </div>
-                <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>{grouped[t].values.length} lecturas</div>
+                <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>{grouped[t].values.length} readings</div>
               </div>
             );
           })}
@@ -165,7 +165,7 @@ function MetricsCharts({ metrics, metricTypes }: { metrics: Metric[]; metricType
         {/* Bar chart */}
         <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "1.25rem", marginBottom: "1rem" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 12 }}>
-            Promedio por tipo
+            Average by type
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 12 }}>
             {types.map((t, i) => (
@@ -176,14 +176,14 @@ function MetricsCharts({ metrics, metricTypes }: { metrics: Metric[]; metricType
             ))}
           </div>
           <div style={{ position: "relative", width: "100%", height: 220 }}>
-            <canvas ref={barRef} role="img" aria-label="Gráfica de barras con promedio por tipo de métrica">Promedio por tipo de métrica.</canvas>
+            <canvas ref={barRef} role="img" aria-label="Bar chart showing average by metric type">Average by metric type.</canvas>
           </div>
         </div>
 
         {/* Line chart */}
         <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "1.25rem" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 12 }}>
-            Tendencia de lecturas
+            Reading trends
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 12 }}>
             {types.slice(0, 4).map((t, i) => (
@@ -194,7 +194,7 @@ function MetricsCharts({ metrics, metricTypes }: { metrics: Metric[]; metricType
             ))}
           </div>
           <div style={{ position: "relative", width: "100%", height: 220 }}>
-            <canvas ref={lineRef} role="img" aria-label="Gráfica de líneas con tendencia de métricas">Tendencia de las últimas métricas.</canvas>
+            <canvas ref={lineRef} role="img" aria-label="Line chart showing metric reading trends">Latest metric reading trends.</canvas>
           </div>
         </div>
       </div>
@@ -261,12 +261,12 @@ function Dashboard() {
           alertsData,
         ] = await Promise.all([
           getDevices(),
-          safeRequest(getDeviceTypes(), [] as DeviceType[], "Tipos de dispositivos"),
-          safeRequest(getLocations(), [] as HospitalLocation[], "Ubicaciones"),
-          safeRequest(getMetrics(), [] as Metric[], "Métricas"),
-          safeRequest(getMetricTypes(), [] as MetricType[], "Tipos de métricas"),
+          safeRequest(getDeviceTypes(), [] as DeviceType[], "Device types"),
+          safeRequest(getLocations(), [] as HospitalLocation[], "Locations"),
+          safeRequest(getMetrics(), [] as Metric[], "Metrics"),
+          safeRequest(getMetricTypes(), [] as MetricType[], "Metric types"),
           permissions?.canViewAlerts
-            ? safeRequest(getAlerts(), [] as Alert[], "Alertas")
+            ? safeRequest(getAlerts(), [] as Alert[], "Alerts")
             : Promise.resolve([] as Alert[]),
         ]);
 
@@ -279,8 +279,8 @@ function Dashboard() {
           setAlerts(alertsData);
         }
       } catch (e) {
-        if (isMounted.current) setError("Error al cargar los datos. Por favor, intenta de nuevo.");
-        console.warn("Error general", e);
+        if (isMounted.current) setError("Error loading data. Please try again.");
+        console.warn("General error", e);
       } finally {
         if (isMounted.current) setLoading(false);
       }
@@ -345,7 +345,7 @@ function Dashboard() {
         getDevices(),
         permissions?.canViewAlerts
           ? getAlerts().catch((refreshError) => {
-              console.warn("Alertas refresh", refreshError);
+              console.warn("Alerts refresh", refreshError);
               return [] as Alert[];
             })
           : Promise.resolve([] as Alert[]),
@@ -357,7 +357,7 @@ function Dashboard() {
       }
     } catch (e) {
       console.warn("Refresh", e);
-      setError("No se pudieron actualizar los dispositivos.");
+      setError("Could not refresh devices.");
     } finally {
       setLoading(false);
     }
@@ -368,12 +368,12 @@ function Dashboard() {
 
   const handleDeleteDevice = async (deviceId: string | number) => {
     if (!permissions?.canDelete) return;
-    if (!window.confirm("¿Estás seguro de que deseas eliminar este dispositivo?")) return;
+    if (!window.confirm("Are you sure you want to delete this device?")) return;
     try {
       await deleteDevice(deviceId);
       setDevices((prev) => prev.filter((d) => String(d.id) !== String(deviceId)));
     } catch {
-      setError("Error al eliminar el dispositivo.");
+      setError("Error deleting device.");
     }
   };
 
@@ -386,22 +386,50 @@ function Dashboard() {
   };
 
   const getLocationName = (locationId?: string | number) => {
-    if (!locationId) return "Sin ubicación";
-    return locationMap.get(String(locationId)) || `Ubicación ${locationId}`;
+    if (!locationId) return "No location";
+    return locationMap.get(String(locationId)) || `Location ${locationId}`;
   };
 
   const getTypeName = (typeId?: string | number) => {
-    if (!typeId) return "Sin tipo";
-    return deviceTypeMap.get(String(typeId)) || `Tipo ${typeId}`;
+    if (!typeId) return "No type";
+    return deviceTypeMap.get(String(typeId)) || `Type ${typeId}`;
   };
 
   const stats = useMemo(
     () =>
       [
-        { label: "Dispositivos", value: filteredDevices.length, icon: "🩺", color: "#3b82f6", bg: "#eff6ff", visible: true },
-        { label: "Alertas críticas", value: alerts.filter((a) => a.severity?.toLowerCase() === "critical").length, icon: "⚠️", color: "#f59e0b", bg: "#fffbeb", visible: permissions?.canViewAlerts === true },
-        { label: "Activos", value: filteredDevices.filter((d) => String(d.status || d.estado || "").toLowerCase().includes("activo")).length, icon: "📊", color: "#10b981", bg: "#ecfdf5", visible: true },
-        { label: "Ubicaciones", value: locations.length, icon: "📍", color: "#8b5cf6", bg: "#f5f3ff", visible: permissions?.canViewAll === true },
+        {
+          label: "Devices",
+          value: filteredDevices.length,
+          icon: "ti-stethoscope",
+          color: "#3b82f6",
+          bg: "#eff6ff",
+          visible: true,
+        },
+        {
+          label: "Critical alerts",
+          value: alerts.filter((a) => a.severity?.toLowerCase() === "critical").length,
+          icon: "ti-alert-triangle",
+          color: "#f59e0b",
+          bg: "#fffbeb",
+          visible: permissions?.canViewAlerts === true,
+        },
+        {
+          label: "Active",
+          value: filteredDevices.filter((d) => String(d.status || d.estado || "").toLowerCase().includes("activo")).length,
+          icon: "ti-chart-bar",
+          color: "#10b981",
+          bg: "#ecfdf5",
+          visible: true,
+        },
+        {
+          label: "Locations",
+          value: locations.length,
+          icon: "ti-map-pin",
+          color: "#8b5cf6",
+          bg: "#f5f3ff",
+          visible: permissions?.canViewAll === true,
+        },
       ].filter((stat) => stat.visible),
     [filteredDevices, alerts, locations.length, permissions]
   );
@@ -411,7 +439,7 @@ function Dashboard() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#f8fafc" }}>
         <div style={{ textAlign: "center" }}>
           <div style={{ width: 48, height: 48, border: "3px solid #e2e8f0", borderTopColor: "#3b82f6", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
-          <p style={{ color: "#64748b", fontFamily: "system-ui" }}>Cargando...</p>
+          <p style={{ color: "#64748b", fontFamily: "system-ui" }}>Loading...</p>
         </div>
       </div>
     );
@@ -419,6 +447,10 @@ function Dashboard() {
 
   return (
     <div className="db-root">
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"
+      />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,700;0,800;1,700&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -444,7 +476,7 @@ function Dashboard() {
         .db-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.75rem; }
         .db-stat { background: #fff; border-radius: 12px; padding: 1.25rem 1.5rem; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 1rem; transition: box-shadow 0.2s, transform 0.2s; }
         .db-stat:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.07); transform: translateY(-2px); }
-        .db-stat-icon { width: 46px; height: 46px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+        .db-stat-icon { width: 46px; height: 46px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
         .db-stat-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #94a3b8; margin-bottom: 3px; }
         .db-stat-value { font-family: 'Fraunces', serif; font-size: 1.75rem; font-weight: 800; line-height: 1; }
         .db-card { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; }
@@ -456,7 +488,7 @@ function Dashboard() {
         .db-input:focus { border-color: #3b82f6; background: #fff; }
         .db-select { padding: 7px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 0.85rem; color: #0f172a; background: #f8fafc; outline: none; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: border-color 0.15s; }
         .db-select:focus { border-color: #3b82f6; }
-        .db-btn-primary { background: #3b82f6; color: #fff; border: none; padding: 7px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.15s, transform 0.15s; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
+        .db-btn-primary { background: #3b82f6; color: #fff; border: none; padding: 7px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.15s, transform 0.15s; font-family: 'DM Sans', sans-serif; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
         .db-btn-primary:hover:not(:disabled) { background: #2563eb; transform: translateY(-1px); }
         .db-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
         .db-table-wrap { overflow-x: auto; }
@@ -476,14 +508,14 @@ function Dashboard() {
         .db-badge-inactive::before { background: #ef4444; }
         .db-badge-maintenance { background: #fef9c3; color: #854d0e; }
         .db-badge-maintenance::before { background: #eab308; }
-        .db-loc-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 0.8rem; color: #475569; }
+        .db-loc-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #475569; }
         .db-action-btns { display: flex; gap: 6px; }
-        .db-btn-edit { background: #eff6ff; color: #1d4ed8; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: background 0.15s; font-family: 'DM Sans', sans-serif; }
+        .db-btn-edit { background: #eff6ff; color: #1d4ed8; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: background 0.15s; font-family: 'DM Sans', sans-serif; display: inline-flex; align-items: center; gap: 5px; }
         .db-btn-edit:hover { background: #dbeafe; }
-        .db-btn-del { background: #fff1f2; color: #be123c; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: background 0.15s; font-family: 'DM Sans', sans-serif; }
+        .db-btn-del { background: #fff1f2; color: #be123c; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: background 0.15s; font-family: 'DM Sans', sans-serif; display: inline-flex; align-items: center; gap: 5px; }
         .db-btn-del:hover { background: #ffe4e6; }
         .db-empty { text-align: center; padding: 3rem 2rem; color: #94a3b8; }
-        .db-empty-icon { font-size: 2.5rem; margin-bottom: 10px; opacity: 0.5; }
+        .db-empty-icon { font-size: 2.5rem; margin-bottom: 10px; opacity: 0.4; color: #94a3b8; }
         .db-empty-title { font-weight: 700; color: #475569; margin-bottom: 4px; font-size: 0.95rem; }
         .db-error { background: #fff1f2; border: 1px solid #fecdd3; color: #be123c; padding: 12px 16px; border-radius: 8px; margin: 1rem 1.5rem; font-size: 0.875rem; display: flex; align-items: center; gap: 8px; }
         .db-spinner-wrap { text-align: center; padding: 3rem; color: #94a3b8; font-size: 0.875rem; }
@@ -514,12 +546,12 @@ function Dashboard() {
         </div>
         <ul className="db-nav-links">
           <li><button className="db-nav-link active" onClick={() => navigate("/dashboard")}>Dashboard</button></li>
-          <li><button className="db-nav-link" onClick={() => navigate("/devices")}>Dispositivos</button></li>
-          {permissions.canViewAll && <li><button className="db-nav-link" onClick={() => navigate("/locations")}>Ubicaciones</button></li>}
-          {permissions.canViewAll && <li><button className="db-nav-link" onClick={() => navigate("/metrics")}>Métricas</button></li>}
-          {permissions.canViewAlerts && <li><button className="db-nav-link" onClick={() => navigate("/alerts")}>Alertas</button></li>}
-          {permissions.canViewReports && <li><button className="db-nav-link" onClick={() => navigate("/reports")}>Reportes</button></li>}
-          {permissions.canManageUsers && <li><button className="db-nav-link" onClick={() => navigate("/users")}>Usuarios</button></li>}
+          <li><button className="db-nav-link" onClick={() => navigate("/devices")}>Devices</button></li>
+          {permissions.canViewAll && <li><button className="db-nav-link" onClick={() => navigate("/locations")}>Locations</button></li>}
+          {permissions.canViewAll && <li><button className="db-nav-link" onClick={() => navigate("/metrics")}>Metrics</button></li>}
+          {permissions.canViewAlerts && <li><button className="db-nav-link" onClick={() => navigate("/alerts")}>Alerts</button></li>}
+          {permissions.canViewReports && <li><button className="db-nav-link" onClick={() => navigate("/reports")}>Reports</button></li>}
+          {permissions.canManageUsers && <li><button className="db-nav-link" onClick={() => navigate("/users")}>Users</button></li>}
         </ul>
         <div className="db-nav-right">
           <div className="db-nav-user">
@@ -529,9 +561,9 @@ function Dashboard() {
               <span className="db-role-pill" style={{ backgroundColor: roleInfo[userProfile.role].color }}>{roleInfo[userProfile.role].label}</span>
             </div>
           </div>
-          <button className="db-btn-ghost" onClick={() => navigate("/profile")}>Perfil</button>
+          <button className="db-btn-ghost" onClick={() => navigate("/profile")}>Profile</button>
           <button className="db-btn-ghost" onClick={() => navigate("/")}>Home</button>
-          <button className="db-btn-ghost" onClick={handleLogout}>Cerrar sesión</button>
+          <button className="db-btn-ghost" onClick={handleLogout}>Sign out</button>
         </div>
       </nav>
 
@@ -540,8 +572,8 @@ function Dashboard() {
         <div className="db-page-header">
           <h1 className="db-page-title">Dashboard</h1>
           <p className="db-page-sub">
-            Panel de monitoreo de dispositivos médicos
-            {userProfile.role === "technician" && " · Dispositivos asignados"}
+            Medical device monitoring panel
+            {userProfile.role === "technician" && " · Assigned devices"}
           </p>
         </div>
 
@@ -549,7 +581,9 @@ function Dashboard() {
         <div className="db-stats">
           {stats.map((s) => (
             <div className="db-stat" key={s.label}>
-              <div className="db-stat-icon" style={{ background: s.bg }}>{s.icon}</div>
+              <div className="db-stat-icon" style={{ background: s.bg, color: s.color }}>
+                <i className={`ti ${s.icon}`} aria-hidden="true" />
+              </div>
               <div>
                 <div className="db-stat-label">{s.label}</div>
                 <div className="db-stat-value" style={{ color: s.color }}>{s.value}</div>
@@ -562,51 +596,67 @@ function Dashboard() {
         <div className="db-card">
           <div className="db-card-head">
             <div>
-              <div className="db-card-title">Dispositivos registrados</div>
+              <div className="db-card-title">Registered devices</div>
               <div className="db-card-sub">
-                {userProfile.role === "technician" ? "Dispositivos asignados a tu usuario" : "Listado de dispositivos del sistema"}
+                {userProfile.role === "technician" ? "Devices assigned to your account" : "System device list"}
               </div>
             </div>
             <div className="db-card-actions">
               {permissions.canViewAll && (
                 <>
-                  <input type="text" className="db-input" placeholder="Buscar dispositivo..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                  <input type="text" className="db-input" placeholder="Search device..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                   <select className="db-select" value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}>
-                    <option value="all">Todos los estados</option>
-                    <option value="activo">Activo</option>
-                    <option value="inactivo">Inactivo</option>
-                    <option value="mantenimiento">Mantenimiento</option>
+                    <option value="all">All statuses</option>
+                    <option value="activo">Active</option>
+                    <option value="inactivo">Inactive</option>
+                    <option value="mantenimiento">Maintenance</option>
                   </select>
                   {locations.length > 0 && (
                     <select className="db-select" value={selectedLocation} onChange={(e) => setSelectedLocation(e.target.value)}>
-                      <option value="all">Todas las ubicaciones</option>
+                      <option value="all">All locations</option>
                       {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
                     </select>
                   )}
                 </>
               )}
               <button className="db-btn-primary" onClick={handleRefresh} disabled={loading}>
-                {loading ? "⟳ Cargando..." : "⟳ Actualizar"}
+                <i className="ti ti-refresh" aria-hidden="true" />
+                {loading ? "Loading..." : "Refresh"}
               </button>
             </div>
           </div>
 
-          {loading && <div className="db-spinner-wrap"><div className="db-spinner" /><p>Cargando dispositivos...</p></div>}
-          {error && <div className="db-error">✕ {error}</div>}
+          {loading && (
+            <div className="db-spinner-wrap">
+              <div className="db-spinner" />
+              <p>Loading devices...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="db-error">
+              <i className="ti ti-x" aria-hidden="true" />
+              {error}
+            </div>
+          )}
 
           {!loading && !error && filteredDevices.length === 0 && devices.length === 0 && (
             <div className="db-empty">
-              <div className="db-empty-icon">📭</div>
-              <div className="db-empty-title">No hay dispositivos</div>
-              <p style={{ fontSize: "0.8rem" }}>Cuando existan dispositivos, aparecerán aquí.</p>
+              <div className="db-empty-icon">
+                <i className="ti ti-inbox" aria-hidden="true" />
+              </div>
+              <div className="db-empty-title">No devices</div>
+              <p style={{ fontSize: "0.8rem" }}>Devices will appear here once they are registered.</p>
             </div>
           )}
 
           {!loading && !error && filteredDevices.length === 0 && devices.length > 0 && (
             <div className="db-empty">
-              <div className="db-empty-icon">🔍</div>
-              <div className="db-empty-title">Sin resultados</div>
-              <p style={{ fontSize: "0.8rem" }}>Intenta con otros términos o filtros.</p>
+              <div className="db-empty-icon">
+                <i className="ti ti-search" aria-hidden="true" />
+              </div>
+              <div className="db-empty-title">No results</div>
+              <p style={{ fontSize: "0.8rem" }}>Try different search terms or filters.</p>
             </div>
           )}
 
@@ -616,11 +666,11 @@ function Dashboard() {
                 <thead>
                   <tr>
                     <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Estado</th>
-                    <th>Ubicación</th>
-                    <th>Tipo</th>
-                    <th>Acciones</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Location</th>
+                    <th>Type</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -630,15 +680,26 @@ function Dashboard() {
                     return (
                       <tr key={device.id}>
                         <td><span className="db-device-id">{device.id}</span></td>
-                        <td><span className="db-device-name">{device.name || device.nombre || "Sin nombre"}</span></td>
-                        <td><span className={`db-badge db-badge-${statusClass}`}>{status || "Sin estado"}</span></td>
-                        <td><span className="db-loc-tag">📍 {getLocationName(device.location_id)}</span></td>
+                        <td><span className="db-device-name">{device.name || device.nombre || "Unnamed"}</span></td>
+                        <td><span className={`db-badge db-badge-${statusClass}`}>{status || "No status"}</span></td>
+                        <td>
+                          <span className="db-loc-tag">
+                            <i className="ti ti-map-pin" aria-hidden="true" style={{ fontSize: "0.9rem" }} />
+                            {getLocationName(device.location_id)}
+                          </span>
+                        </td>
                         <td>{getTypeName(device.device_type_id)}</td>
                         <td>
                           <div className="db-action-btns">
-                            <button className="db-btn-edit" onClick={() => setDetailDevice(device)}>Ver más</button>
+                            <button className="db-btn-edit" onClick={() => setDetailDevice(device)}>
+                              <i className="ti ti-eye" aria-hidden="true" />
+                              View
+                            </button>
                             {permissions.canDelete && (
-                              <button className="db-btn-del" onClick={() => handleDeleteDevice(device.id)}>Eliminar</button>
+                              <button className="db-btn-del" onClick={() => handleDeleteDevice(device.id)}>
+                                <i className="ti ti-trash" aria-hidden="true" />
+                                Delete
+                              </button>
                             )}
                           </div>
                         </td>
@@ -651,7 +712,7 @@ function Dashboard() {
           )}
         </div>
 
-        {/* Métricas charts */}
+        {/* Metrics charts */}
         {metrics.length > 0 && (
           <MetricsCharts metrics={metrics} metricTypes={metricTypes} />
         )}
@@ -661,13 +722,13 @@ function Dashboard() {
       <footer className="db-footer">
         <div>
           <div className="db-footer-brand">Hospital San Rafael</div>
-          <div className="db-footer-text">Plataforma de microservicios · Sistema de monitoreo hospitalario</div>
+          <div className="db-footer-text">Microservices platform · Hospital monitoring system</div>
         </div>
         <div className="db-footer-links">
           <button className="db-footer-link" onClick={() => navigate("/dashboard")}>Dashboard</button>
-          {permissions.canViewAll && <button className="db-footer-link" onClick={() => navigate("/locations")}>Ubicaciones</button>}
-          {permissions.canViewAll && <button className="db-footer-link" onClick={() => navigate("/metrics")}>Métricas</button>}
-          <button className="db-footer-link" onClick={handleLogout}>Cerrar sesión</button>
+          {permissions.canViewAll && <button className="db-footer-link" onClick={() => navigate("/locations")}>Locations</button>}
+          {permissions.canViewAll && <button className="db-footer-link" onClick={() => navigate("/metrics")}>Metrics</button>}
+          <button className="db-footer-link" onClick={handleLogout}>Sign out</button>
         </div>
       </footer>
 
@@ -682,12 +743,18 @@ function Dashboard() {
             width: "100%", maxWidth: 400, boxShadow: "0 24px 60px rgba(0,0,0,0.2)",
             fontFamily: "'DM Sans', sans-serif", margin: "0 1rem",
           }}>
-            <div style={{ fontSize: "2rem", textAlign: "center", marginBottom: "1rem" }}>👋</div>
+            <div style={{
+              width: 56, height: 56, borderRadius: "50%", background: "#f1f5f9",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 1rem", fontSize: 26, color: "#64748b",
+            }}>
+              <i className="ti ti-logout" aria-hidden="true" />
+            </div>
             <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: "1.2rem", fontWeight: 800, color: "#0f172a", textAlign: "center", marginBottom: 8 }}>
-              ¿Cerrar sesión?
+              Sign out?
             </h3>
             <p style={{ color: "#64748b", fontSize: "0.875rem", textAlign: "center", marginBottom: "1.5rem", lineHeight: 1.6 }}>
-              Tu sesión actual se cerrará. Tendrás que iniciar sesión de nuevo para acceder al sistema.
+              Your current session will be closed. You will need to sign in again to access the system.
             </p>
             <div style={{ display: "flex", gap: 10 }}>
               <button
@@ -698,7 +765,7 @@ function Dashboard() {
                   cursor: "pointer", fontSize: "0.875rem", fontFamily: "'DM Sans', sans-serif",
                 }}
               >
-                Cancelar
+                Cancel
               </button>
               <button
                 onClick={confirmLogout}
@@ -706,9 +773,11 @@ function Dashboard() {
                   flex: 1, padding: "0.7rem", borderRadius: 8, border: "none",
                   background: "#ef4444", color: "#fff", fontWeight: 700,
                   cursor: "pointer", fontSize: "0.875rem", fontFamily: "'DM Sans', sans-serif",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                 }}
               >
-                Sí, cerrar sesión
+                <i className="ti ti-logout" aria-hidden="true" />
+                Yes, sign out
               </button>
             </div>
           </div>

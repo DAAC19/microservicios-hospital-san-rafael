@@ -56,8 +56,8 @@ function Alerts() {
       const data = await getAlerts();
       setAlerts(data);
     } catch (error) {
-      console.warn("No se pudieron cargar las alertas", error);
-      setError("No se pudieron cargar las alertas.");
+      console.warn("Could not load alerts", error);
+      setError("Could not load alerts.");
     } finally {
       setLoading(false);
     }
@@ -104,13 +104,13 @@ function Alerts() {
         )
       );
     } catch {
-      setError("No se pudo resolver la alerta.");
+      setError("Could not resolve the alert.");
     }
   };
 
   const handleCreate = async () => {
     if (!newDeviceId || !newMessage || !newSeverityId) {
-      setCreateError("Completa todos los campos.");
+      setCreateError("Please fill in all fields.");
       return;
     }
 
@@ -132,8 +132,8 @@ function Alerts() {
         setNewSeverityId(String(severities[0].id));
       }
     } catch (error) {
-      console.warn("Error al crear la alerta", error);
-      setCreateError("Error al crear la alerta.");
+      console.warn("Error creating alert", error);
+      setCreateError("Error creating alert.");
     } finally {
       setCreating(false);
     }
@@ -153,14 +153,14 @@ function Alerts() {
 
       setConfirmDelete(null);
     } catch {
-      setError("No se pudo eliminar la alerta.");
+      setError("Could not delete the alert.");
       setConfirmDelete(null);
     } finally {
       setDeleting(false);
     }
   };
 
- const handleLogout = () => { setShowLogoutModal(true); };
+  const handleLogout = () => { setShowLogoutModal(true); };
 
   const isResolved = (a: Alert) =>
     String(a.status).toLowerCase() === "resolved" ||
@@ -229,7 +229,7 @@ function Alerts() {
             }}
           />
           <p style={{ color: "#64748b", fontFamily: "system-ui" }}>
-            Cargando...
+            Loading...
           </p>
         </div>
       </div>
@@ -238,6 +238,10 @@ function Alerts() {
 
   return (
     <div className="db-root">
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"
+      />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,700;0,800;1,700&display=swap');
 
@@ -428,7 +432,7 @@ function Alerts() {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.3rem;
+          font-size: 1.4rem;
           flex-shrink: 0;
         }
 
@@ -525,6 +529,9 @@ function Alerts() {
           cursor: pointer;
           font-family: 'DM Sans', sans-serif;
           white-space: nowrap;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
         }
 
         .db-btn-primary:hover:not(:disabled) {
@@ -546,6 +553,9 @@ function Alerts() {
           font-weight: 600;
           cursor: pointer;
           font-family: 'DM Sans', sans-serif;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
         }
 
         .db-btn-success:hover {
@@ -567,6 +577,9 @@ function Alerts() {
           font-weight: 600;
           cursor: pointer;
           font-family: 'DM Sans', sans-serif;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
         }
 
         .db-btn-del:hover {
@@ -704,6 +717,9 @@ function Alerts() {
           border-radius: 8px;
           margin: 1rem 1.5rem;
           font-size: 0.875rem;
+          display: flex;
+          align-items: center;
+          gap: 8px;
         }
 
         .db-spinner-wrap {
@@ -732,7 +748,8 @@ function Alerts() {
         .db-empty-icon {
           font-size: 2.5rem;
           margin-bottom: 10px;
-          opacity: 0.5;
+          opacity: 0.4;
+          color: #94a3b8;
         }
 
         .db-empty-title {
@@ -867,7 +884,8 @@ function Alerts() {
           align-items: center;
           justify-content: center;
           margin: 0 auto 1.1rem;
-          font-size: 24px;
+          font-size: 26px;
+          color: #dc2626;
         }
 
         .db-modal-title {
@@ -925,6 +943,10 @@ function Alerts() {
           color: #fff;
           font-family: 'DM Sans', sans-serif;
           transition: background 0.15s;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
         }
 
         .db-modal-confirm:hover {
@@ -937,13 +959,8 @@ function Alerts() {
         }
 
         @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-
-          to {
-            opacity: 1;
-          }
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
 
         @keyframes slideUp {
@@ -951,7 +968,6 @@ function Alerts() {
             opacity: 0;
             transform: translateY(16px) scale(0.97);
           }
-
           to {
             opacity: 1;
             transform: none;
@@ -959,9 +975,7 @@ function Alerts() {
         }
 
         @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
+          to { transform: rotate(360deg); }
         }
       `}</style>
 
@@ -971,18 +985,20 @@ function Alerts() {
           onClick={() => !deleting && setConfirmDelete(null)}
         >
           <div className="db-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="db-modal-icon">🗑️</div>
-            <div className="db-modal-title">¿Eliminar esta alerta?</div>
+            <div className="db-modal-icon">
+              <i className="ti ti-trash" aria-hidden="true" />
+            </div>
+            <div className="db-modal-title">Delete this alert?</div>
 
             <p className="db-modal-body">
-              Vas a eliminar la alerta <strong>#{confirmDelete.id}</strong>:
+              You are about to delete alert <strong>#{confirmDelete.id}</strong>:
               <br />
               <span style={{ fontStyle: "italic", color: "#94a3b8" }}>
                 "{confirmDelete.message}"
               </span>
               <br />
               <br />
-              Esta acción <strong>no se puede deshacer</strong>.
+              This action <strong>cannot be undone</strong>.
             </p>
 
             <div className="db-modal-actions">
@@ -991,7 +1007,7 @@ function Alerts() {
                 onClick={() => setConfirmDelete(null)}
                 disabled={deleting}
               >
-                Cancelar
+                Cancel
               </button>
 
               <button
@@ -999,14 +1015,15 @@ function Alerts() {
                 onClick={handleDelete}
                 disabled={deleting}
               >
-                {deleting ? "Eliminando..." : "Sí, eliminar"}
+                <i className="ti ti-trash" aria-hidden="true" />
+                {deleting ? "Deleting..." : "Yes, delete"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-<Navbar
+      <Navbar
         user={user}
         permissions={permissions}
         activePage="alerts"
@@ -1014,18 +1031,18 @@ function Alerts() {
       />
 
       <main className="db-main">
-        <h1 className="db-page-title">Alertas</h1>
+        <h1 className="db-page-title">Alerts</h1>
         <p className="db-page-sub">
-          Monitoreo de alertas del sistema hospitalario
+          Hospital system alert monitoring
         </p>
 
         <div className="db-stats">
           <div className="db-stat">
-            <div className="db-stat-icon" style={{ background: "#fef2f2" }}>
-              🚨
+            <div className="db-stat-icon" style={{ background: "#fef2f2", color: "#ef4444" }}>
+              <i className="ti ti-bell-ringing" aria-hidden="true" />
             </div>
             <div>
-              <div className="db-stat-label">Total alertas</div>
+              <div className="db-stat-label">Total alerts</div>
               <div className="db-stat-value" style={{ color: "#ef4444" }}>
                 {total}
               </div>
@@ -1033,11 +1050,11 @@ function Alerts() {
           </div>
 
           <div className="db-stat">
-            <div className="db-stat-icon" style={{ background: "#fff1f2" }}>
-              ⚠️
+            <div className="db-stat-icon" style={{ background: "#fff1f2", color: "#be123c" }}>
+              <i className="ti ti-alert-triangle" aria-hidden="true" />
             </div>
             <div>
-              <div className="db-stat-label">Críticas</div>
+              <div className="db-stat-label">Critical</div>
               <div className="db-stat-value" style={{ color: "#be123c" }}>
                 {critical}
               </div>
@@ -1045,11 +1062,11 @@ function Alerts() {
           </div>
 
           <div className="db-stat">
-            <div className="db-stat-icon" style={{ background: "#fffbeb" }}>
-              🔶
+            <div className="db-stat-icon" style={{ background: "#fffbeb", color: "#d97706" }}>
+              <i className="ti ti-alert-circle" aria-hidden="true" />
             </div>
             <div>
-              <div className="db-stat-label">Abiertas</div>
+              <div className="db-stat-label">Open</div>
               <div className="db-stat-value" style={{ color: "#d97706" }}>
                 {open}
               </div>
@@ -1057,11 +1074,11 @@ function Alerts() {
           </div>
 
           <div className="db-stat">
-            <div className="db-stat-icon" style={{ background: "#f0fdf4" }}>
-              ✅
+            <div className="db-stat-icon" style={{ background: "#f0fdf4", color: "#15803d" }}>
+              <i className="ti ti-circle-check" aria-hidden="true" />
             </div>
             <div>
-              <div className="db-stat-label">Resueltas</div>
+              <div className="db-stat-label">Resolved</div>
               <div className="db-stat-value" style={{ color: "#15803d" }}>
                 {resolved}
               </div>
@@ -1073,25 +1090,25 @@ function Alerts() {
           <div className="db-card">
             <div className="db-card-head">
               <div>
-                <div className="db-card-title">Nueva alerta</div>
-                <div className="db-card-sub">Registrar alerta manualmente</div>
+                <div className="db-card-title">New alert</div>
+                <div className="db-card-sub">Register an alert manually</div>
               </div>
             </div>
 
             <div className="db-form-row">
               <div className="db-form-group">
-                <label className="db-form-label">ID Dispositivo</label>
+                <label className="db-form-label">Device ID</label>
                 <input
                   className="db-form-inp"
                   type="number"
-                  placeholder="Ej: 4"
+                  placeholder="e.g. 4"
                   value={newDeviceId}
                   onChange={(e) => setNewDeviceId(e.target.value)}
                 />
               </div>
 
               <div className="db-form-group">
-                <label className="db-form-label">Severidad</label>
+                <label className="db-form-label">Severity</label>
                 <select
                   className="db-form-inp"
                   value={newSeverityId}
@@ -1104,17 +1121,17 @@ function Alerts() {
                       </option>
                     ))
                   ) : (
-                    <option value="">Cargando...</option>
+                    <option value="">Loading...</option>
                   )}
                 </select>
               </div>
 
               <div className="db-form-group" style={{ gridColumn: "1 / -1" }}>
-                <label className="db-form-label">Mensaje</label>
+                <label className="db-form-label">Message</label>
                 <input
                   className="db-form-inp"
                   type="text"
-                  placeholder="Descripción de la alerta..."
+                  placeholder="Alert description..."
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                 />
@@ -1123,7 +1140,8 @@ function Alerts() {
 
             {createError && (
               <div className="db-error" style={{ margin: "0 1.5rem 1rem" }}>
-                ✕ {createError}
+                <i className="ti ti-x" aria-hidden="true" />
+                {createError}
               </div>
             )}
 
@@ -1133,7 +1151,8 @@ function Alerts() {
                 onClick={handleCreate}
                 disabled={creating}
               >
-                {creating ? "Creando..." : "+ Crear alerta"}
+                <i className="ti ti-plus" aria-hidden="true" />
+                {creating ? "Creating..." : "Create alert"}
               </button>
             </div>
           </div>
@@ -1142,9 +1161,9 @@ function Alerts() {
         <div className="db-card">
           <div className="db-card-head">
             <div>
-              <div className="db-card-title">Listado de alertas</div>
+              <div className="db-card-title">Alert list</div>
               <div className="db-card-sub">
-                Todas las alertas registradas en el sistema
+                All alerts registered in the system
               </div>
             </div>
 
@@ -1152,7 +1171,7 @@ function Alerts() {
               <input
                 className="db-input"
                 type="text"
-                placeholder="Buscar alerta..."
+                placeholder="Search alert..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -1162,9 +1181,9 @@ function Alerts() {
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
               >
-                <option value="all">Todos los estados</option>
-                <option value="open">Abierta</option>
-                <option value="resolved">Resuelta</option>
+                <option value="all">All statuses</option>
+                <option value="open">Open</option>
+                <option value="resolved">Resolved</option>
               </select>
 
               <select
@@ -1172,7 +1191,7 @@ function Alerts() {
                 value={filterSeverity}
                 onChange={(e) => setFilterSeverity(e.target.value)}
               >
-                <option value="all">Todas las severidades</option>
+                <option value="all">All severities</option>
                 {severities.map((s) => (
                   <option key={s.id} value={s.name.toLowerCase()}>
                     {s.name}
@@ -1185,7 +1204,8 @@ function Alerts() {
                 onClick={fetchAlerts}
                 disabled={loading}
               >
-                {loading ? "⟳ Cargando..." : "⟳ Actualizar"}
+                <i className="ti ti-refresh" aria-hidden="true" />
+                {loading ? "Loading..." : "Refresh"}
               </button>
             </div>
           </div>
@@ -1193,18 +1213,25 @@ function Alerts() {
           {loading && (
             <div className="db-spinner-wrap">
               <div className="db-spinner" />
-              <p>Cargando alertas...</p>
+              <p>Loading alerts...</p>
             </div>
           )}
 
-          {error && <div className="db-error">✕ {error}</div>}
+          {error && (
+            <div className="db-error">
+              <i className="ti ti-x" aria-hidden="true" />
+              {error}
+            </div>
+          )}
 
           {!loading && !error && filtered.length === 0 && (
             <div className="db-empty">
-              <div className="db-empty-icon">🔔</div>
-              <div className="db-empty-title">No hay alertas</div>
+              <div className="db-empty-icon">
+                <i className="ti ti-bell-off" aria-hidden="true" />
+              </div>
+              <div className="db-empty-title">No alerts found</div>
               <p style={{ fontSize: "0.8rem" }}>
-                No se encontraron alertas con los filtros aplicados.
+                No alerts match the current filters.
               </p>
             </div>
           )}
@@ -1215,12 +1242,12 @@ function Alerts() {
                 <thead>
                   <tr>
                     <th>ID</th>
-                    <th>Dispositivo</th>
-                    <th>Severidad</th>
-                    <th>Mensaje</th>
-                    <th>Estado</th>
-                    <th>Fecha</th>
-                    <th>Acciones</th>
+                    <th>Device</th>
+                    <th>Severity</th>
+                    <th>Message</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
 
@@ -1236,7 +1263,7 @@ function Alerts() {
                         </td>
 
                         <td>
-                          <strong>Disp. #{alert.device_id}</strong>
+                          <strong>Device #{alert.device_id}</strong>
                         </td>
 
                         <td>
@@ -1255,13 +1282,13 @@ function Alerts() {
                               res ? "db-badge-resolved" : "db-badge-open"
                             }`}
                           >
-                            {res ? "Resuelta" : "Abierta"}
+                            {res ? "Resolved" : "Open"}
                           </span>
                         </td>
 
                         <td style={{ fontSize: "0.78rem", color: "#64748b" }}>
                           {alert.created_at
-                            ? new Date(alert.created_at).toLocaleString("es-CO")
+                            ? new Date(alert.created_at).toLocaleString("en-US")
                             : "—"}
                         </td>
 
@@ -1271,18 +1298,20 @@ function Alerts() {
                               className="db-btn-success"
                               onClick={() => handleResolve(alert.id)}
                               disabled={res}
-                              title={res ? "Ya resuelta" : "Marcar como resuelta"}
+                              title={res ? "Already resolved" : "Mark as resolved"}
                             >
-                              ✔ Resolver
+                              <i className="ti ti-check" aria-hidden="true" />
+                              Resolve
                             </button>
 
                             {canDelete && (
                               <button
                                 className="db-btn-del"
                                 onClick={() => setConfirmDelete(alert)}
-                                title="Eliminar alerta"
+                                title="Delete alert"
+                                aria-label="Delete alert"
                               >
-                                🗑️
+                                <i className="ti ti-trash" aria-hidden="true" />
                               </button>
                             )}
                           </div>
@@ -1301,7 +1330,7 @@ function Alerts() {
         <div>
           <div className="db-footer-brand">Hospital San Rafael</div>
           <div className="db-footer-text">
-            Plataforma de microservicios · Sistema de monitoreo hospitalario
+            Microservices platform · Hospital monitoring system
           </div>
         </div>
 
@@ -1318,7 +1347,7 @@ function Alerts() {
               className="db-footer-link"
               onClick={() => navigate("/alerts")}
             >
-              Alertas
+              Alerts
             </button>
           )}
 
@@ -1327,12 +1356,12 @@ function Alerts() {
               className="db-footer-link"
               onClick={() => navigate("/reports")}
             >
-              Reportes
+              Reports
             </button>
           )}
 
           <button className="db-footer-link" onClick={handleLogout}>
-            Cerrar sesión
+            Sign out
           </button>
           {showLogoutModal && <LogoutModal onCancel={() => setShowLogoutModal(false)} />}
         </div>

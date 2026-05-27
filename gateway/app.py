@@ -29,7 +29,7 @@ app.register_blueprint(reports_bp)
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({
-        "message": "API Gateway Hospital San Rafael funcionando correctamente"
+        "message": "API Gateway Hospital San Rafael functioning correctly"
     }), 200
 
 
