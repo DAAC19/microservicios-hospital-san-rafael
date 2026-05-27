@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAlerts, createAlert, resolveAlert } from "../services/alertService";
 import { logout, getUserProfile } from "../services/authService";
-import { roleInfo, rolePermissionsMap } from "../utils/permissions";
+import { rolePermissionsMap } from "../utils/permissions";
 import api from "../api/api";
 import type { Alert } from "../types/alert";
 import type { User, RolePermissions } from "../types/auth";
-import logoHSF from "../assets/logoHSF.jpg";
+import Navbar from "../components/Navbar";
 import LogoutModal from "../components/LogoutModal";
 
 function Alerts() {
@@ -1006,81 +1006,12 @@ function Alerts() {
         </div>
       )}
 
-      <nav className="db-nav">
-        <div className="db-nav-brand">
-          <img
-            className="db-nav-brand-icon"
-            src={logoHSF}
-            alt="Hospital San Rafael"
-          />
-          <span className="db-nav-brand-text">Hospital San Rafael</span>
-        </div>
-
-        <ul className="db-nav-links">
-          <li>
-            <button className="db-nav-link" onClick={() => navigate("/dashboard")}>
-              Dashboard
-            </button>
-          </li>
-
-          {permissions.canViewAll && (
-            <li>
-              <button
-                className="db-nav-link"
-                onClick={() => navigate("/locations")}
-              >
-                Ubicaciones
-              </button>
-            </li>
-          )}
-
-          {permissions.canViewAll && (
-            <li>
-              <button className="db-nav-link" onClick={() => navigate("/metrics")}>
-                Métricas
-              </button>
-            </li>
-          )}
-
-          {permissions.canViewAlerts && (
-            <li>
-              <button className="db-nav-link active">Alertas</button>
-            </li>
-          )}
-
-          {permissions.canViewReports && (
-            <li>
-              <button className="db-nav-link" onClick={() => navigate("/reports")}>
-                Reportes
-              </button>
-            </li>
-          )}
-        </ul>
-
-        <div className="db-nav-right">
-          <div className="db-nav-user">
-            <div className="db-nav-avatar">{roleInfo[user.role].icon}</div>
-
-            <div>
-              <div className="db-nav-username">{user.username}</div>
-              <span
-                className="db-role-pill"
-                style={{ backgroundColor: roleInfo[user.role].color }}
-              >
-                {roleInfo[user.role].label}
-              </span>
-            </div>
-          </div>
-
-          <button className="db-btn-ghost" onClick={() => navigate("/")}>
-            ← Home
-          </button>
-
-          <button className="db-btn-ghost" onClick={handleLogout}>
-            Cerrar sesión
-          </button>
-        </div>
-      </nav>
+<Navbar
+        user={user}
+        permissions={permissions}
+        activePage="alerts"
+        onLogout={handleLogout}
+      />
 
       <main className="db-main">
         <h1 className="db-page-title">Alertas</h1>

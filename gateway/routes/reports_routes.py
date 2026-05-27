@@ -10,11 +10,11 @@ from utils import response_json
 reports_bp = Blueprint("reports_bp", __name__)
 
 TYPE_MAP = {
-    "general":  "/general",
-    "alerts":   "/alerts",
-    "metrics":  "/metrics",
-    "devices":  "/devices",
-    "last_24h": "/last24h",
+    "general":  "/reports/general",
+    "alerts":   "/reports/alerts",
+    "metrics":  "/reports/metrics",
+    "devices":  "/reports/devices",
+    "last_24h": "/reports/last24h",
 }
 
 

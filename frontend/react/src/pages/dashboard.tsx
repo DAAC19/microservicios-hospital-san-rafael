@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getDevices, deleteDevice, getDeviceTypes } from "../services/deviceService";
 import { logout, getUserProfile } from "../services/authService";
@@ -24,36 +24,46 @@ function MetricsCharts({ metrics, metricTypes }: { metrics: Metric[]; metricType
   const barChart = useRef<Chart | null>(null);
   const lineChart = useRef<Chart | null>(null);
 
-  const getTypeName = (id: string | number) =>
-    metricTypes.find((t) => String(t.id) === String(id))?.name || `Tipo ${id}`;
+  const groupedData = useMemo(() => {
+    const typeNames = new Map<string, string>();
+    metricTypes.forEach((type) => {
+      typeNames.set(String(type.id), type.name);
+    });
 
-  const grouped: Record<string, { values: number[]; unit: string }> = {};
-  metrics.forEach((m) => {
-    const key = m.metric_type || getTypeName(m.metric_type_id);
-    if (!grouped[key]) grouped[key] = { values: [], unit: m.unit || "" };
-    grouped[key].values.push(m.value);
-  });
+    const grouped: Record<string, { values: number[]; unit: string }> = {};
+    metrics.forEach((metric) => {
+      const fallbackName = `Tipo ${metric.metric_type_id}`;
+      const key = metric.metric_type || typeNames.get(String(metric.metric_type_id)) || fallbackName;
+      if (!grouped[key]) {
+        grouped[key] = { values: [], unit: metric.unit || "" };
+      }
+      grouped[key].values.push(metric.value);
+    });
 
-  const types = Object.keys(grouped);
+    const types = Object.keys(grouped);
+    const averages = types.map((type) =>
+      parseFloat((grouped[type].values.reduce((acc, value) => acc + value, 0) / grouped[type].values.length).toFixed(1))
+    );
+    const maxSeriesLength = types.length ? Math.max(...types.map((type) => grouped[type].values.length)) : 0;
+    const lineLabels = Array.from({ length: maxSeriesLength }, (_, index) => `#${index + 1}`);
+
+    return { grouped, types, averages, lineLabels };
+  }, [metrics, metricTypes]);
+
+  const { grouped, types, averages, lineLabels } = groupedData;
 
   useEffect(() => {
-    if (!types.length) return;
-
-    const avgs = types.map((t) =>
-      parseFloat((grouped[t].values.reduce((a, b) => a + b, 0) / grouped[t].values.length).toFixed(1))
-    );
-
-    if (barRef.current) {
-      barChart.current?.destroy();
+    if (!barRef.current) return;
+    if (!barChart.current) {
       barChart.current = new Chart(barRef.current, {
         type: "bar",
         data: {
-          labels: types,
+          labels: [],
           datasets: [{
             label: "Promedio",
-            data: avgs,
-            backgroundColor: types.map((_, i) => CHART_COLORS[i % CHART_COLORS.length] + "cc"),
-            borderColor: types.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]),
+            data: [],
+            backgroundColor: [],
+            borderColor: [],
             borderWidth: 1.5,
             borderRadius: 6,
           }],
@@ -70,23 +80,22 @@ function MetricsCharts({ metrics, metricTypes }: { metrics: Metric[]; metricType
       });
     }
 
-    if (lineRef.current) {
-      lineChart.current?.destroy();
+    const chart = barChart.current;
+    chart.data.labels = types;
+    chart.data.datasets[0].data = averages;
+    chart.data.datasets[0].backgroundColor = types.map((_, index) => CHART_COLORS[index % CHART_COLORS.length] + "cc");
+    chart.data.datasets[0].borderColor = types.map((_, index) => CHART_COLORS[index % CHART_COLORS.length]);
+    chart.update();
+  }, [types, averages]);
+
+  useEffect(() => {
+    if (!lineRef.current) return;
+    if (!lineChart.current) {
       lineChart.current = new Chart(lineRef.current, {
         type: "line",
         data: {
-          labels: Array.from({ length: Math.max(...types.map(t => grouped[t].values.length)) }, (_, i) => `#${i + 1}`),
-          datasets: types.slice(0, 4).map((t, i) => ({
-            label: t,
-            data: grouped[t].values,
-            borderColor: CHART_COLORS[i % CHART_COLORS.length],
-            backgroundColor: "transparent",
-            tension: 0.4,
-            pointRadius: 4,
-            pointBackgroundColor: CHART_COLORS[i % CHART_COLORS.length],
-            borderWidth: 2,
-            borderDash: i === 1 ? [5, 3] : i === 2 ? [2, 2] : [],
-          })),
+          labels: [],
+          datasets: [],
         },
         options: {
           responsive: true,
@@ -100,11 +109,30 @@ function MetricsCharts({ metrics, metricTypes }: { metrics: Metric[]; metricType
       });
     }
 
+    const chart = lineChart.current;
+    chart.data.labels = lineLabels;
+    chart.data.datasets = types.slice(0, 4).map((type, index) => ({
+            label: type,
+            data: grouped[type].values,
+            borderColor: CHART_COLORS[index % CHART_COLORS.length],
+            backgroundColor: "transparent",
+            tension: 0.4,
+            pointRadius: 4,
+            pointBackgroundColor: CHART_COLORS[index % CHART_COLORS.length],
+            borderWidth: 2,
+            borderDash: index === 1 ? [5, 3] : index === 2 ? [2, 2] : [],
+          }));
+    chart.update();
+  }, [types, grouped, lineLabels]);
+
+  useEffect(() => {
     return () => {
       barChart.current?.destroy();
+      barChart.current = null;
       lineChart.current?.destroy();
+      lineChart.current = null;
     };
-  }, [metrics, metricTypes]);
+  }, []);
 
   if (!types.length) return null;
 
@@ -186,7 +214,7 @@ function Dashboard() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<User | null>(null);
   const [permissions, setPermissions] = useState<RolePermissions | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -199,7 +227,7 @@ function Dashboard() {
     const loadUserProfile = async () => {
       try {
         const userData = await getUserProfile();
-        setUser(userData);
+        setUserProfile(userData);
         setPermissions(rolePermissionsMap[userData.role]);
       } catch {
         logout();
@@ -215,32 +243,40 @@ function Dashboard() {
         setLoading(true);
         setError("");
 
-        const devicesData = await getDevices();
-        if (isMounted.current) setDevices(devicesData);
-
-        try {
-          const typesData = await getDeviceTypes();
-          if (isMounted.current) setDeviceTypes(typesData);
-        } catch (e) { console.warn("Tipos de dispositivos", e); }
-
-        try {
-          const locationsData = await getLocations();
-          if (isMounted.current) setLocations(locationsData);
-        } catch (e) { console.warn("Ubicaciones", e); }
-
-        try {
-          const [metricsData, metricTypesData] = await Promise.all([getMetrics(), getMetricTypes()]);
-          if (isMounted.current) {
-            setMetrics(metricsData);
-            setMetricTypes(metricTypesData);
-          }
-        } catch (e) { console.warn("Métricas", e); }
-
-        if (permissions?.canViewAlerts) {
+        const safeRequest = async <T,>(request: Promise<T>, fallback: T, label: string): Promise<T> => {
           try {
-            const alertsData = await getAlerts();
-            if (isMounted.current) setAlerts(alertsData);
-          } catch (e) { console.warn("Alertas", e); }
+            return await request;
+          } catch (requestError) {
+            console.warn(label, requestError);
+            return fallback;
+          }
+        };
+
+        const [
+          devicesData,
+          typesData,
+          locationsData,
+          metricsData,
+          metricTypesData,
+          alertsData,
+        ] = await Promise.all([
+          getDevices(),
+          safeRequest(getDeviceTypes(), [] as DeviceType[], "Tipos de dispositivos"),
+          safeRequest(getLocations(), [] as HospitalLocation[], "Ubicaciones"),
+          safeRequest(getMetrics(), [] as Metric[], "Métricas"),
+          safeRequest(getMetricTypes(), [] as MetricType[], "Tipos de métricas"),
+          permissions?.canViewAlerts
+            ? safeRequest(getAlerts(), [] as Alert[], "Alertas")
+            : Promise.resolve([] as Alert[]),
+        ]);
+
+        if (isMounted.current) {
+          setDevices(devicesData);
+          setDeviceTypes(typesData);
+          setLocations(locationsData);
+          setMetrics(metricsData);
+          setMetricTypes(metricTypesData);
+          setAlerts(alertsData);
         }
       } catch (e) {
         if (isMounted.current) setError("Error al cargar los datos. Por favor, intenta de nuevo.");
@@ -254,47 +290,70 @@ function Dashboard() {
 
   useEffect(() => {
     const isMounted = { current: true };
-    if (user && permissions) {
+    if (userProfile && permissions) {
       Promise.resolve().then(() => {
         if (isMounted.current) void fetchAllData(isMounted);
       });
     }
     return () => { isMounted.current = false; };
-  }, [user, permissions, fetchAllData]);
+  }, [userProfile, permissions, fetchAllData]);
 
-  let filteredDevices = [...devices];
-  if (user?.role === "technician") {
-    filteredDevices = filteredDevices.filter((d) =>
-      !d.assigned_user_id || String(d.assigned_user_id) === String(user.id)
-    );
-  }
-  if (searchTerm.trim()) {
-    const q = searchTerm.toLowerCase();
-    filteredDevices = filteredDevices.filter((d) => {
-      const name = d.name || d.nombre || "";
-      return name.toLowerCase().includes(q) || String(d.id).includes(q);
-    });
-  }
-  if (selectedStatus !== "all") {
-    filteredDevices = filteredDevices.filter((d) =>
-      (d.status || d.estado || "").toLowerCase() === selectedStatus.toLowerCase()
-    );
-  }
-  if (selectedLocation !== "all") {
-    filteredDevices = filteredDevices.filter((d) => String(d.location_id) === String(selectedLocation));
-  }
+  const locationMap = useMemo(
+    () => new Map(locations.map((location) => [String(location.id), location.name])),
+    [locations]
+  );
+
+  const deviceTypeMap = useMemo(
+    () => new Map(deviceTypes.map((type) => [String(type.id), type.name])),
+    [deviceTypes]
+  );
+
+  const filteredDevices = useMemo(() => {
+    let nextDevices = [...devices];
+    if (userProfile?.role === "technician") {
+      nextDevices = nextDevices.filter(
+        (device) =>
+          !device.assigned_user_id || String(device.assigned_user_id) === String(userProfile.id)
+      );
+    }
+    if (searchTerm.trim()) {
+      const query = searchTerm.toLowerCase();
+      nextDevices = nextDevices.filter((device) => {
+        const name = device.name || device.nombre || "";
+        return name.toLowerCase().includes(query) || String(device.id).includes(query);
+      });
+    }
+    if (selectedStatus !== "all") {
+      nextDevices = nextDevices.filter(
+        (device) =>
+          (device.status || device.estado || "").toLowerCase() === selectedStatus.toLowerCase()
+      );
+    }
+    if (selectedLocation !== "all") {
+      nextDevices = nextDevices.filter(
+        (device) => String(device.location_id) === String(selectedLocation)
+      );
+    }
+    return nextDevices;
+  }, [devices, userProfile, searchTerm, selectedStatus, selectedLocation]);
 
   const handleRefresh = async () => {
     try {
       setLoading(true);
       setError("");
-      const data = await getDevices();
-      setDevices(data);
+      const [devicesData, alertsData] = await Promise.all([
+        getDevices(),
+        permissions?.canViewAlerts
+          ? getAlerts().catch((refreshError) => {
+              console.warn("Alertas refresh", refreshError);
+              return [] as Alert[];
+            })
+          : Promise.resolve([] as Alert[]),
+      ]);
+
+      setDevices(devicesData);
       if (permissions?.canViewAlerts) {
-        try {
-          const alertsData = await getAlerts();
-          setAlerts(alertsData);
-        } catch (e) { console.warn("Alertas refresh", e); }
+        setAlerts(alertsData);
       }
     } catch (e) {
       console.warn("Refresh", e);
@@ -328,24 +387,26 @@ function Dashboard() {
 
   const getLocationName = (locationId?: string | number) => {
     if (!locationId) return "Sin ubicación";
-    const loc = locations.find((l) => String(l.id) === String(locationId));
-    return loc?.name || `Ubicación ${locationId}`;
+    return locationMap.get(String(locationId)) || `Ubicación ${locationId}`;
   };
 
   const getTypeName = (typeId?: string | number) => {
     if (!typeId) return "Sin tipo";
-    const type = deviceTypes.find((item) => String(item.id) === String(typeId));
-    return type?.name || `Tipo ${typeId}`;
+    return deviceTypeMap.get(String(typeId)) || `Tipo ${typeId}`;
   };
 
-  const stats = [
-    { label: "Dispositivos", value: filteredDevices.length, icon: "🩺", color: "#3b82f6", bg: "#eff6ff", visible: true },
-    { label: "Alertas críticas", value: alerts.filter((a) => a.severity?.toLowerCase() === "critical").length, icon: "⚠️", color: "#f59e0b", bg: "#fffbeb", visible: permissions?.canViewAlerts === true },
-    { label: "Activos", value: filteredDevices.filter((d) => String(d.status || d.estado || "").toLowerCase().includes("activo")).length, icon: "📊", color: "#10b981", bg: "#ecfdf5", visible: true },
-    { label: "Ubicaciones", value: locations.length, icon: "📍", color: "#8b5cf6", bg: "#f5f3ff", visible: permissions?.canViewAll === true },
-  ].filter((s) => s.visible);
+  const stats = useMemo(
+    () =>
+      [
+        { label: "Dispositivos", value: filteredDevices.length, icon: "🩺", color: "#3b82f6", bg: "#eff6ff", visible: true },
+        { label: "Alertas críticas", value: alerts.filter((a) => a.severity?.toLowerCase() === "critical").length, icon: "⚠️", color: "#f59e0b", bg: "#fffbeb", visible: permissions?.canViewAlerts === true },
+        { label: "Activos", value: filteredDevices.filter((d) => String(d.status || d.estado || "").toLowerCase().includes("activo")).length, icon: "📊", color: "#10b981", bg: "#ecfdf5", visible: true },
+        { label: "Ubicaciones", value: locations.length, icon: "📍", color: "#8b5cf6", bg: "#f5f3ff", visible: permissions?.canViewAll === true },
+      ].filter((stat) => stat.visible),
+    [filteredDevices, alerts, locations.length, permissions]
+  );
 
-  if (!user || !permissions) {
+  if (!userProfile || !permissions) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#f8fafc" }}>
         <div style={{ textAlign: "center" }}>
@@ -462,10 +523,10 @@ function Dashboard() {
         </ul>
         <div className="db-nav-right">
           <div className="db-nav-user">
-            <div className="db-nav-avatar">{roleInfo[user.role].icon}</div>
+            <div className="db-nav-avatar">{roleInfo[userProfile.role].icon}</div>
             <div>
-              <div className="db-nav-username">{user.username}</div>
-              <span className="db-role-pill" style={{ backgroundColor: roleInfo[user.role].color }}>{roleInfo[user.role].label}</span>
+              <div className="db-nav-username">{userProfile.username}</div>
+              <span className="db-role-pill" style={{ backgroundColor: roleInfo[userProfile.role].color }}>{roleInfo[userProfile.role].label}</span>
             </div>
           </div>
           <button className="db-btn-ghost" onClick={() => navigate("/profile")}>Perfil</button>
@@ -480,7 +541,7 @@ function Dashboard() {
           <h1 className="db-page-title">Dashboard</h1>
           <p className="db-page-sub">
             Panel de monitoreo de dispositivos médicos
-            {user.role === "technician" && " · Dispositivos asignados"}
+            {userProfile.role === "technician" && " · Dispositivos asignados"}
           </p>
         </div>
 
@@ -503,7 +564,7 @@ function Dashboard() {
             <div>
               <div className="db-card-title">Dispositivos registrados</div>
               <div className="db-card-sub">
-                {user.role === "technician" ? "Dispositivos asignados a tu usuario" : "Listado de dispositivos del sistema"}
+                {userProfile.role === "technician" ? "Dispositivos asignados a tu usuario" : "Listado de dispositivos del sistema"}
               </div>
             </div>
             <div className="db-card-actions">

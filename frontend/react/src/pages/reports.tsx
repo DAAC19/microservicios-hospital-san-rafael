@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getReports } from "../services/reportsService";
 import { logout, getUserProfile } from "../services/authService";
-import { roleInfo, rolePermissionsMap } from "../utils/permissions";
+import { rolePermissionsMap } from "../utils/permissions";
 import type { User, RolePermissions } from "../types/auth";
+import Navbar from "../components/Navbar";
 import LogoutModal from "../components/LogoutModal";
 
 
@@ -607,33 +608,12 @@ const handleLogout = () => { setShowLogoutModal(true); };
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
 
-      {/* NAVBAR */}
-      <nav className="db-nav">
-        <div className="db-nav-brand">
-          <div className="db-nav-brand-icon">🏥</div>
-          <span className="db-nav-brand-text">Hospital San Rafael</span>
-        </div>
-        <ul className="db-nav-links">
-          <li><button className="db-nav-link" onClick={() => navigate("/dashboard")}>Dashboard</button></li>
-          {permissions.canViewAll && <li><button className="db-nav-link" onClick={() => navigate("/locations")}>Ubicaciones</button></li>}
-          {permissions.canViewAll && <li><button className="db-nav-link" onClick={() => navigate("/metrics")}>Métricas</button></li>}
-          {permissions.canViewAlerts && <li><button className="db-nav-link" onClick={() => navigate("/alerts")}>Alertas</button></li>}
-          {permissions.canViewReports && <li><button className="db-nav-link active">Reportes</button></li>}
-        </ul>
-        <div className="db-nav-right">
-          <div className="db-nav-user">
-            <div className="db-nav-avatar">{roleInfo[user.role].icon}</div>
-            <div>
-              <div className="db-nav-username">{user.username}</div>
-              <span className="db-role-pill" style={{ backgroundColor: roleInfo[user.role].color }}>
-                {roleInfo[user.role].label}
-              </span>
-            </div>
-          </div>
-          <button className="db-btn-ghost" onClick={() => navigate("/")}>← Home</button>
-          <button className="db-btn-ghost" onClick={handleLogout}>Cerrar sesión</button>
-        </div>
-      </nav>
+      <Navbar
+        user={user}
+        permissions={permissions}
+        activePage="reports"
+        onLogout={handleLogout}
+      />
 
       {/* MAIN */}
       <main className="db-main">

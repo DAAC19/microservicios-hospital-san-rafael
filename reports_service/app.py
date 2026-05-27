@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 from config import Config
 from extensions import db
 from routes.reportsRoutes import reports_bp
@@ -10,6 +11,9 @@ def create_app():
     db.init_app(app)
 
     app.register_blueprint(reports_bp, url_prefix="/api")
+
+    CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
+
     return app
 
 if __name__ == "__main__":
