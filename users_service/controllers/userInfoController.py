@@ -9,7 +9,7 @@ def get_user_by_id(user_id):
     user = User.query.get(user_id)
     
     if not user:
-        return{"mensaje":"Usuario no encontrado"}, 404
+        return{"Message: User not found"}, 404
     
     return serialize_user(user),200
 
@@ -24,13 +24,13 @@ def create_user(data):
         return {"error":"El documento ya se encuentra registrado"}, 400
     db.session.add(new_user)
     db.session.commit()
-    return serialize_user(new_user), {"mensaje":"Usuario creado exitosamente"}, 200
+    return serialize_user(new_user), {"message": "User created successfully"}, 200
 
 def update_user(user_id, data):
     user = User.query.get(user_id)
     
     if not user:
-        return {"mensaje":"Usuario no encontrado"}, 404
+        return {"message": "User not found"}, 404
     
     new_document = data.get('document')
     if new_document:
@@ -40,23 +40,23 @@ def update_user(user_id, data):
                 User.id != user_id
             ).first()
             if existing_user:
-                return {"error":"El documento ya está registrado"}, 400
+                return {"error":"The document is already registered"}, 400
             user.document = new_document
     
     user.first_name = data.get('first_name', user.first_name)
     user.last_name = data.get('last_name', user.last_name)
     user.phone = data.get('phone', user.phone)
     db.session.commit()
-    return serialize_user(user), {"mensaje":"Usuario actualizado correctamente"}, 200
+    return serialize_user(user), {"message": "User updated successfully"}, 200
 
 def delete_user(user_id):
     user = User.query.get(user_id)
     
     if not user:
-        return {"mensaje":"Usuario no encontrado"}, 404
+        return {"message": "User not found"}, 404
     db.session.delete(user)
     db.session.commit()
-    return {"mensaje":"Usuario eliminado exitosamente"}, 200
+    return {"message": "User deleted successfully"}, 200
 
 def serialize_user(user):
     return{

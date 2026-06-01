@@ -11,7 +11,7 @@ devices_bp = Blueprint("devices_bp", __name__)
 
 @devices_bp.route("/devices", methods=["GET"])
 @token_required
-@roles_required("ADMIN", "TECNICIAN", "SUPERVISOR", "USER")
+@roles_required("ADMIN", "TECHNICIAN", "SUPERVISOR", "USER")
 def get_devices():
     response = requests.get(DEVICES_URL)
     return response_json(response)
@@ -19,7 +19,7 @@ def get_devices():
 
 @devices_bp.route("/devices", methods=["POST"])
 @token_required
-@roles_required("ADMIN", "TECNICIAN")
+@roles_required("ADMIN", "TECHNICIAN")
 def create_device():
     response = requests.post(
         DEVICES_URL,
@@ -31,7 +31,7 @@ def create_device():
 
 @devices_bp.route("/devices/<int:id>", methods=["GET"])
 @token_required
-@roles_required("ADMIN", "TECNICIAN", "SUPERVISOR", "USER")
+@roles_required("ADMIN", "TECHNICIAN", "SUPERVISOR", "USER")
 def get_device(id):
     response = requests.get(f"{DEVICES_URL}/{id}")
     return response_json(response)
@@ -39,7 +39,7 @@ def get_device(id):
 
 @devices_bp.route("/devices/<int:id>", methods=["PUT"])
 @token_required
-@roles_required("ADMIN", "TECNICIAN")
+@roles_required("ADMIN", "TECHNICIAN")
 def update_device(id):
     response = requests.put(
         f"{DEVICES_URL}/{id}",
@@ -59,7 +59,7 @@ def delete_device(id):
 
 @devices_bp.route("/device-types", methods=["GET"])
 @token_required
-@roles_required("ADMIN", "TECNICIAN", "SUPERVISOR", "USER")
+@roles_required("ADMIN", "TECHNICIAN", "SUPERVISOR", "USER")
 def get_device_types():
     response = requests.get(DEVICE_TYPES_URL)
     return response_json(response)
@@ -79,7 +79,7 @@ def create_device_type():
 
 @devices_bp.route("/device-types/<int:id>", methods=["GET"])
 @token_required
-@roles_required("ADMIN", "TECNICIAN", "SUPERVISOR", "USER")
+@roles_required("ADMIN", "TECHNICIAN", "SUPERVISOR", "USER")
 def get_device_type(id):
     response = requests.get(f"{DEVICE_TYPES_URL}/{id}")
     return response_json(response)

@@ -7,6 +7,7 @@ from config import SECRET_KEY
 def generate_token(user_credentials, role):
     payload = {
         "credential_id": user_credentials.id,
+        "user_id": user_credentials.user_id,
         "username": user_credentials.username,
         "role_id":role.id,
         "role": role.role_name,

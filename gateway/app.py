@@ -23,13 +23,13 @@ app.register_blueprint(locations_bp)
 app.register_blueprint(devices_bp)
 app.register_blueprint(metrics_bp)
 app.register_blueprint(alerts_bp)
-app.register_blueprint(reports_bp)
+app.register_blueprint(reports_bp, url_prefix="/api")
 
 
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({
-        "message": "API Gateway Hospital San Rafael funcionando correctamente"
+        "message": "API Gateway Hospital San Rafael functioning correctly"
     }), 200
 
 
@@ -42,4 +42,4 @@ def health():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0",port=5000,debug=True)
+    app.run(host="0.0.0.0",port=5000,debug=True, use_reloader=False)

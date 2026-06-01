@@ -3,10 +3,7 @@ from datetime import datetime
 
 
 class AlertSeverity(db.Model):
-    """
-    Catálogo de niveles de gravedad.
-    Ejemplos: CRITICAL, WARNING, INFO
-    """
+    
     __tablename__ = "alert_severities"
 
     id   = db.Column(db.Integer, primary_key=True)
@@ -22,10 +19,7 @@ class AlertSeverity(db.Model):
 
 
 class Alert(db.Model):
-    """
-    Alertas generadas por el sistema de monitoreo.
-    Cada alerta está asociada a un dispositivo y tiene un nivel de severidad.
-    """
+
     __tablename__ = "alerts"
 
     id          = db.Column(db.Integer, primary_key=True)

@@ -7,7 +7,7 @@ def response_json(response):
 
     except Exception:
         return jsonify({
-            "message": "Error al comunicarse con el microservicio",
+            "message": "Error occurred while communicating with the microservice",
             "status_code": response.status_code,
             "response": response.text
         }), response.status_code
